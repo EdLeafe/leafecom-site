@@ -1,0 +1,37 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="title()">Consulting</%def>
+<%def name="extraCSS()"/>
+<%def name="extraJS()"/>
+<%def name="body()">
+	
+	<div style="padding: 4px; font-size: 150%; color: darkred; background-color: #EEEEEE;">
+		Please note that as of January 2008 I have returned to the ranks of the employed, and am no longer working as a consultant.
+	</div>
+	
+	<div style="padding:4px;">
+		<h2>Database Design</h2>
+		<p>For the past fifteen years, I have been specializing in designing and developing database applications. Some of my clients include Daimler-Benz, 3M, Corning, eMedicine.com, Ogilvy & Mather, AT&T Capital Corporation, and many others, both big and small. For more information, you can view my <b><a href="/consulting/resume">online r&eacute;sum&eacute;</a></b></p> 
+		<p>The design of the data is independent of the actual relational database used for a project, so no matter what database you have, I can work with it. Most of my experience has been with four database products: <a href="http://www.mysql.com/"><b>MySQL</b></a>, <a href="http://www.postgresql.org/"><b>PostgreSQL</b></a>, <a href="http://msdn.microsoft.com/vfoxpro"><b>Visual FoxPro</b></a>, and <a href="http://microsoft.com/sql/default.asp"><b>Microsoft SQL Server</b></a>.</p>
+	</div>
+	
+	<div style="padding:4px;">
+		<h2>Python</h2>
+		<p>I have been developing in <a href="http://www.python.org">Python</a> for over five years now, and am currently co-author of a major open-source project called '<b>Dabo</b>'. With Dabo, we are creating a tool to develop database applications, much like Visual FoxPro, Delphi, PowerBuilder, and other similar tools. The resulting apps have a true 3-tier design, with UI, business rules and database access properly separated. It has been well-received by the Python community, and is the leading tool for desktop application development now. You can read more about Dabo at the <a href="http://dabodev.com">Dabo website</a>.</p>
+	</div>
+
+	<div style="padding:4px;">
+		<h2>Web Applications</h2>
+		<p>Getting the data into a database is only half of the problem. Being able to publish the data to the people who need it is just as important. It's rare these days to find a business that doesn't need to interact with customers or clients over the web, and static pages just don't cut it anymore. </p> 
+		<p>I work with a number of web application programs that help you quickly and flexibly develop web-based applications from the same data used for internal desktop apps. I specialize in <a href="http://www.zope.org"><b>Zope</b></a>, and have also done a little development in two other Python web frameworks: <a href="http://www.djangoproject.com/">Django</a> and <a href="http://turbogears.org/">TurboGears</a>.</p>
+		<p>Zope is a open source web application server, written in Python. It is a scalable, stable, powerful system that includes an object database, a web server and several templating languages. Zope is developed and supported primarily by Zope Corporation, but also by many developers worldwide.</p>
+		<p>Oh, by the way, this site is developed and served in <b>Zope!</b></p>
+	</div>
+
+	<div style="padding:4px;">
+		<h2>Web Services</h2>
+		<p>Despite all the hype from the various companies promoting Web Services, they really are powerful and extremely useful. They are also fairly simple to implement if you have the right tools and the right design. <a href="http://www.soaprpc.com/faqs/SoapFAQ.html" target="_blank"><b>SOAP</b></a> may have been a good idea, but has turned into an unwieldy mess that requires specialized tools to handle. </p>
+		<p>I prefer the more direct forms of Web Services that communicates over HTTP without a lot of extra baggage. I've built a feature into Dabo called <b>Web Update</b> that compares your installed version with the latest on our servers, and if a more recent version is available, offers to update your copy. This is all done via basic web communication without SOAP, and enables Dabo users to have the latest and greatest code with a single click of a button.</p>
+	</div>
+
+</%def>

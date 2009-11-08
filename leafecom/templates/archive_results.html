@@ -1,0 +1,57 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="extraCSS()"/>
+<%def name="extraJS()"/>
+<%def name="title()">Search Results</%def>
+
+<%def name="body()">
+  <div>
+% if not c.results:
+	<div>
+	  <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
+	</div>
+% endif
+
+% if c.results:
+	<div>
+	<%
+		numResults = len(c.results)
+		plural = {1: ""}.get(numResults, "es")
+	%>
+	<h3>Your query returned <span class="queryResNum">${numResults}</span> match${plural} in ${c.elapsed} seconds</h3>
+	<table border="0">
+		<tr>
+			<th class="rcell">#</th>
+			<th></th>
+			<th class="lcell" style="text-decoration: underline;">Subject, Author, Date Posted</th>
+		</tr>
+	% for num, msg in enumerate(c.results):
+		<tr class="archiveSearchRow">
+			<td class="rcell">${num}.</td>
+			<td></td>
+			<td class="lcell"><a href="/archives/msg/${msg.imsg}">${msg.csubject}</a><br>
+			<%
+				author = msg.cfrom
+				addStart = author.find("<")
+				if addStart > -1:
+					author = author[:addStart-1]
+				# Remove any quotes author the name
+				author = author.replace('"', '').strip()
+				date = msg.tposted.strftime("%Y.%m.%d")
+				time = msg.tposted.strftime("%H:%M:%S")
+			%>
+			<span class="authorPosting">Author: <b>${author}</b> Posted at: <b>${date}</b> ${time}</span>
+			</td>
+			</span>
+		</tr>
+	% endfor
+	</table>
+	</div>
+	<div style="margin-top: 60px;">
+	<a href="/archives/search/${c.listname}">New Query</a>
+	</div>
+
+% endif
+</div>
+
+</%def>

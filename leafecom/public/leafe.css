@@ -1,0 +1,402 @@
+body {
+	background: white ;
+}
+
+.mainheading {
+   color: #366933 ;
+   background: white ;
+   text-align: right ;
+   font-family: Optima, Arial, Sans-serif ;
+   font-size: 140% ;
+}
+
+.navbar {
+	color: #366933;
+	background: #caefca;
+	text-align: left;
+	font-family: Optima, Arial, Sans-serif;
+	font-size: 90%;
+	padding-left: 58px;
+}
+.navbar a {
+	margin-right: 10px;
+	margin-left: 10px;
+}
+.navbar a:hover {
+	background: #8dfd8d;
+	color: #063903;
+}
+
+.leftsidebar {
+	background: #caefca;
+	width: 52px;
+}
+
+.sidebar {
+   color: #366933 ;
+   background: #caefca ;
+   text-align: center ;
+   font-family: Helvetica, Arial, Sans-serif ;
+   font-size: 100% ;
+   padding: 10px ;
+}
+
+.sidebarSpacer {
+	padding: 10px ;
+}
+
+.sidebarGroup {
+	border-top: 8px solid #6abf6a ;
+	border-bottom: 1px solid #6abf6a ;
+	border-left: 1px solid #6abf6a ;
+	border-right: 1px solid #6abf6a ;
+	padding: 10px 4px 4px 4px ;
+}
+
+.sidebarMain {
+   font-family: Helvetica, Arial, Sans-serif ;
+   font-size: 100% ;
+}
+
+.sidebarSub {
+   font-family: Helvetica, Arial, Sans-serif ;
+   font-size: 85% ;
+}
+
+.sidebarSub2 {
+   font-family: Helvetica, Arial, Sans-serif ;
+   font-size: 70% ;
+}
+
+.sidebarLink {
+   font-family: Helvetica, Arial, Sans-serif ;
+	text-decoration: none ;
+}
+
+a:link {
+	color: #006633; 
+	text-decoration: none; 
+}
+
+a:visited {
+	color: #006300; 
+	text-decoration: none; 
+}
+
+a:hover { 
+	text-decoration: underline; 
+	background: #fcffae;
+}
+
+a:active {
+	color: red;
+	background:orange ; 
+}
+
+.searchterm {
+	font-weight:bold ;
+	background:#cccccc ;
+}
+
+.photoindexcaption {
+	font-size: 80% ;
+}
+
+.searchResultMsg {
+	background:#cccccc ;
+	font-family:Sand, sans-serif ;
+}
+
+.queryResNum {
+	font-weight:bold;
+	color:goldenrod ; 
+	font-size: 110% ;
+}
+
+.archiveMsgContent {
+	background:#ffffdd ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.archiveMsgContent pre {
+	background:#ffffdd ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.searchResultNav {
+	background:white;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.searchResultInfo {
+	background:#dddddd ;
+	text-align:left ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.searchResultLabel {
+	text-align:right ;
+	color:brown ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.searchResultVal {
+	text-align:left ;
+	font-weight:bold ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.archiveSearchRow
+{
+	text-align: left;
+	vertical-align: top;
+	font-family: Microsoft Sans Serif,Verdana,Helvetica,Arial,Sans-serif;
+}
+
+.dlCell#link {
+	text-align: right ;
+	font-weight: bold ;
+	font-family: Helvetica,Arial,Sans-serif ;
+}
+
+.dlCell#desc {
+	text-align: left ;
+	font-size: 85%;
+	font-family: Helvetica,Arial,Sans-serif ;
+	padding-bottom:18px;
+}
+
+.dlFileInfo {
+	color: firebrick ;
+}
+
+.dlFileUpdt {
+	color: #663300 ;
+}
+
+.resumeRow {
+	font-family: Helvetica,Arial,Sans-serif ;
+	text-align: left ;
+	vertical-align: top;
+}
+
+.resumeLabel {
+	font-family: Helvetica,Arial,Sans-serif ;
+	text-align: right ;
+	vertical-align: top;
+}
+
+.resumeTopLink {
+	font-size: small;
+	font-family: Helvetica,Arial,Sans-serif ;
+	font-style: italic;
+}
+
+.resumeCompany {
+	color: darkred;
+	font-size:120%;
+}
+
+.forumCategoryBorder {
+	margin-bottom:12px ;
+	border:1px solid black ;
+	padding:10px ;
+}
+
+.forumCategory {
+	margin:5px 1px 5px 0px ;
+	font-family: Helvetica,Arial,Sans-serif ;
+	font-size:140% ;
+	font-weight:bold ;
+	color:green ;
+}
+
+.forumName {
+	font-family: Helvetica,Arial,Sans-serif ;
+	font-size:120% ;
+	font-weight:bold ;
+	margin: 3px 0px 15px 5px ;
+}
+
+.forumDesc {
+	font-family: Helvetica,Arial,Sans-serif ;
+	margin: 0px 5px 25px 5px ;
+ }
+
+.textComment {
+	font-family: Helvetica, Arial, Sans-serif;
+	font-size: 80%;
+	font-style: normal;
+	text-align: center;
+	border-width: 1px;
+	border-color: black;
+	border-style: dotted;
+}
+
+.lcell {
+	text-align: left;
+	border-width: 1px;
+	font-family: Verdana,Helvetica,Arial,Sans-serif; 
+	font-size: 90%;
+}
+
+.authorPosting {
+	font-size: 75%;
+}
+.rcell {
+	text-align: right;
+	width: 24px;
+}
+
+.msgHilite {
+	background:#ccffcc ;
+	font-weight:bold ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+#invisible {
+	color: white;
+	text-decoration: none; 
+}
+
+a.invisible:link {
+	color: white;
+	text-decoration: none; 
+}
+
+a.invisible:visited {
+	color: white;
+	text-decoration: none; 
+}
+
+a.invisible:hover { 
+	color: white;
+	background: white;
+	text-decoration: none; 
+ }
+
+a.invisible:active {
+	color: white;
+	text-decoration: none; 
+}
+
+a.dlCell:link
+{
+	text-align: right;
+	font-weight: bold;
+	font-family: Helvetica,Arial,Sans-serif;
+}
+
+.uploadform {
+	vertical-align: top; 
+}
+
+.uploadform#label {
+	text-align: right;
+}
+
+.uploadform#val {
+	text-align: left;
+}
+
+.uploadform#c {
+	text-align: center;
+}
+
+.errorMsg {
+	color: red;
+	font-weight: bold;
+}
+
+.para {
+	background:white ;
+	color:black;
+	font-family:Helvetica,Arial,Sans-serif ;
+	margin-bottom:12px;
+}
+
+h1.taskpane {
+	text-align:center;
+	color:darkgreen;
+}
+
+div.qadiv1 {
+	background-color: #cccccc;
+	padding: 10px;
+}
+
+div.qadiv0 {
+	background-color: #eeeeee;
+	padding: 10px;
+}
+
+.faq-q {
+	color: maroon;
+	font-weight: bold;
+}
+
+.faq-a {
+	color: black;
+}
+
+.caldate {
+	font-weight: bold;
+	color: darkblue;
+	font-size: 120% ;
+}
+
+.caltext {
+	text-align: left ;
+	font-family:Helvetica,Arial,Sans-serif ;
+	font-size: 85% ;
+}
+
+.msgCopyright {
+	text-align:center ;
+	font-family:Helvetica,Arial,Sans-serif ;
+	font-size: 85% ;
+	font-style: italic;
+	color:darkred ;
+}	
+
+label { 
+	cursor: pointer; 
+} 
+
+/* nicetitle effects  */
+div.nicetitle {
+    position: absolute;
+    padding: 4px;
+    top: 0px;
+    left: 0px;
+    color: white;
+    font-size: 13px;
+    font-family: Verdana, Helvetica, Arial, sans-serif;
+    width: 25em;
+    font-weight: bold;
+    background: url(/images/ntbg.png);
+    
+    /* Mozilla proprietary */
+    /*-moz-border-radius: 12px;*/
+}
+div.nicetitle p {
+    margin: 0; padding: 0 3px;
+}
+div.nicetitle p.destination {
+    font-size: 9px;
+    text-align: left;
+    padding-top: 3px;
+}
+/* end - nicetitle effects  */
+
+.casualtyBox {
+	border-color: maroon;
+	border-width: thin;
+	border-style: dotted;
+	margin: 0px 20px 20px 0px;
+	width: 225px;
+	float: left;
+	padding: 1px;
+}
+
+.casualtyNumber { font-weight: bold; }

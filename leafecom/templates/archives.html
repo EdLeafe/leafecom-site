@@ -1,0 +1,332 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="title()">Search the Archives</%def>
+
+<%def name="body()">
+  <div>
+	<!--
+	  listname here/listFromRequest; 
+	  hasListName python:listname; 
+	  searchOK python:here.archiveActive() or request. HTTP_X_FORWARDED_FOR=='192.168.0.44'
+	-->
+	 
+% if not c.searchOK:
+	<div>
+	  <h2 style="color: orangered">The archives are being updated, and will be unavailable for the next few hours</h2>
+	</div>
+% endif
+
+<%
+	import datetime
+	thisYear = datetime.date.today().year
+%>
+
+% if c.searchOK:
+	<div>
+		
+		% if not c.listname:
+		<div tal:condition="not:hasListName" style="text-align:center;">
+			<h3>Please select the archive to search</h3>
+			<p><a href="/archives/search/profox" id="lnkProFox" name="lnkProFox">ProFox</a></p>
+			<p><a href="/archives/search/prolinux" id="lnkProLinux" name="lnkProLinux">ProLinux</a></p>
+			<p><a href="/archives/search/propython" id="lnkProPython" name="lnkProPython">ProPython</a></p>
+			<p><a href="/archives/search/codebook" id="lnkCodebook" name="lnkCodebook">Codebook</a></p>
+			<p><a href="/archives/search/dabo-users" id="lnkDaboUsers" name="lnkDaboUsers">Dabo-users</a></p>
+			<p><a href="/archives/search/dabo-dev" id="lnkDaboDev" name="lnkDaboDev">Dabo-dev</a></p>
+			<p><a href="/archives/search/valentina" id="lnkValentina" name="lnkValentina">Valentina</a></p>
+		</div>
+		% endif
+	
+		% if c.listname:
+	<div>
+	<form method="POST" action="/archives/results/${c.listname}" name="searchForm">
+	<input name="listname" type="hidden" value=${c.listname}>
+	
+	<h3 style="color:darkgreen; font-family: Verdana,Tahoma,Chicago,Arial,sans-serif; font-size:120%;">
+	Search the ${c.properListName} List archives</h3>
+	<table cellpadding="20" class="boxtable">
+	<tr>
+	<td>
+		<!--This inner table contains all the search fields-->
+		<table border="0" cellspacing="0" cellpadding="4">
+			<tr>
+				<td class="label"><label for="wordsRequired">Words that must appear in post:</label></td>
+				<td class="field"><input type="text" id="wordsRequired" name="wordsRequired"  size="40" maxlength="80" class="field" size="40"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="wordsForbidden">Words that must NOT appear in post:</label></td>
+				<td class="field"><input type="text" id="wordsForbidden" name="wordsForbidden"	size="40" maxlength="80" class="field"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="phraseRequired">Search post for this specific phrase:</label></td>
+				<td class="field"><input type="text" id="phraseRequired" name="phraseRequired"	size="40" maxlength="80" class="field"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="subjectPhraseRequired">Search subject for this specific phrase:</label></td>
+				<td class="field"><input type="text" id="subjectPhraseRequired" name="subjectPhraseRequired"  size="40" maxlength="80" class="field"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="authorRequired">Filter on authors containing:</label></td>
+				<td class="field"><input type="text" id="authorRequired" name="authorRequired"	size="40" maxlength="80" class="field"></td>
+			</tr>
+			% if c.listname == "profox":
+			<tr>
+				<td class="label"><label for="chkOT">Check this to include Off-Topic posts:</label></td>
+				<td class="field"><input type="checkbox" id="chkOT" name="chkOT"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="chkNF">Check this to include NonFox posts:</label></td>
+				<td class="field"><input type="checkbox" id="chkNF" name="chkNF"></td>
+			</tr>
+			% endif
+			
+			<tr>
+				<!--This 'row' contains cells for the DateRange and Order By tables-->
+				<td colspan="2" align="center">
+					<!--Begin the single-row table that will hold the DateRange and Order By tables-->
+					<table border="0" frame="box">
+					<tr valign="top">
+						<td class="bordercell">
+							<!--Begin the Date Range table-->
+							<table>
+								<tr>
+									<td class="dtRadio"><h4>Date Range</h4>
+									<label for="dateRangeAll"><input type="radio" id="dateRangeAll" name="dateRange" value="dtAll" checked>All Messages</label><br>
+									<label for="dateRangeToday"><input type="radio" id="dateRangeToday" name="dateRange" value="dtToday">Today Only</label><br>
+									<label for="dateRangeYesterday"><input type="radio" id="dateRangeYesterday" name="dateRange" value="dtYesterday">Yesterday Only</label><br>
+									<label for="dateRangeWeek"><input type="radio" id="dateRangeWeek" name="dateRange" value="dtLastWeek">In the Last Week</label><br>
+									<label for="dateRangeMonth"><input type="radio" id="dateRangeMonth" name="dateRange" value="dtLastMonth">In the Last Month</label><br>
+									<label for="dateRangeCustom"><input type="radio" id="dateRangeCustom" name="dateRange" value="dtCustom">Custom Range</label><br>
+										<table border="0" cellpadding="3">
+											<tr>
+												<td width="20">&nbsp; </td>
+												<td><label for="startMonth">Start:</label></td>
+												<td><select class="searchDateSelect" name="startMonth" onchange="setDateFilter()" id="startMonth">
+												<option selected value="0"> - </option>
+												<option value="1"> Jan</option>
+												<option value="2"> Feb</option>
+												<option value="3"> Mar</option>
+												<option value="4"> Apr</option>
+												<option value="5"> May</option>
+												<option value="6"> Jun</option>
+												<option value="7"> Jul</option>
+												<option value="8"> Aug</option>
+												<option value="9"> Sep</option>
+												<option value="10"> Oct</option>
+												<option value="11"> Nov</option>
+												<option value="12"> Dec</option>
+												</select></td>
+												<td><select class="searchDateSelect" name="startDay" onchange="setDateFilter()">
+												<option selected value="0"> - </option>
+												% for day in xrange(1,32):
+													<option value=${day}>${day}</option>
+												% endfor
+												</select></td>
+												
+												<td><select class="searchDateSelect" name="startYear" onchange="setDateFilter()">
+												<option selected value="0"> - </option>
+												% for yr in xrange(thisYear, 1998, -1):
+													<option value=${yr}>${yr}</option>
+												% endfor
+												</select></td>
+											</tr>
+											<tr>
+												<td width="20">&nbsp; </td>
+												<td><label for="endMonth">End:</label></td>
+												<td><select class="searchDateSelect" name="endMonth" onchange="setDateFilter()" id="endMonth">
+												<option selected value="0"> - </option>
+												<option value="1"> Jan</option>
+												<option value="2"> Feb</option>
+												<option value="3"> Mar</option>
+												<option value="4"> Apr</option>
+												<option value="5"> May</option>
+												<option value="6"> Jun</option>
+												<option value="7"> Jul</option>
+												<option value="8"> Aug</option>
+												<option value="9"> Sep</option>
+												<option value="10"> Oct</option>
+												<option value="11"> Nov</option>
+												<option value="12"> Dec</option>
+												</select></td>
+												<td><select class="searchDateSelect" name="endDay" onchange="setDateFilter()">
+												<option selected value="0"> - </option>
+												% for day in xrange(1,32):
+													<option value=${day}>${day}</option>
+												% endfor
+												</select></td>
+												<td><select class="searchDateSelect" name="endYear" onchange="setDateFilter()">
+												<option selected value="0"> - </option>
+												% for yr in xrange(thisYear, 1998, -1):
+													<option value=${yr}>${yr}</option>
+												% endfor
+												</select></td>
+											</tr>
+										</table>
+									</td>
+								
+								</tr>
+							</table>	
+							<!--End the Date Range table-->
+						</td>
+						
+						<!--Spacer cell; might need to adjust its width-->
+						<td width="12">&nbsp;</td>
+						
+						<td class="bordercell">
+							<!--Begin the Order By table-->
+							<table>		
+								<tr>
+									
+									<td>
+										<h4>Order By</h4>
+										<label for="orderByRecent"><input type="radio" id="orderByRecent" name="orderBy" value="dtDesc" checked>Most Recent First</label><br>
+										<label for="orderByOldest"><input type="radio" id="orderByOldest" name="orderBy" value="dtAsc">Oldest First</label><br>
+										<label for="orderByAuthor"><input type="radio" id="orderByAuthor" name="orderBy" value="author">Author's Name</label><br>
+										<label for="orderBySubject"><input type="radio" id="orderBySubject" name="orderBy" value="subject">Subject</label><br>
+									</td>
+								</tr>
+							</table>
+							<!--End the Order By table-->
+							
+							<br>&nbsp; <br>
+							<!--Begin the Batch Size table-->
+							<table>		
+								<tr>
+									
+									<td style="text-align:center;">
+										<span style="text-size:110%; font-weight:bold;"><label for="batchSize">Results per Page</label></span>
+									</td>
+								<tr>
+									<td style="text-align:center;">
+										<select id="batchSize" name="batchSize" size="1">
+										% for batchSize in (50, 100, 150, 200, 250):
+											<option value=${batchSize}>${batchSize}</option>
+										% endfor
+										</select>
+									</td>
+								</tr>
+							</table>
+							<!--End the Batch Size table-->
+							
+						</td>
+					</tr>
+					</table>
+					<!--End the single-row table that will hold the DateRange and Order By tables-->
+				</td>
+			
+			</tr>
+		
+			<tr>
+				<td colspan="2" align="center" valign="middle"><input name="btnSubmit" type="submit" value="   Search!   " alt="submit"></td>
+			</tr>
+		</table>
+		
+	</td>
+	</tr>
+	</table>
+	
+	</form>
+	
+	% if False:
+		<div>
+		<!-- SiteSearch Google -->
+		<FORM method=GET action="http://www.google.com/search">
+		<TABLE bgcolor="#FFFFFF"><tr><td>
+		<A HREF="http://www.google.com/">
+		<IMG SRC="http://www.google.com/logos/Logo_40wht.gif" 
+		border="0" ALT="Google"></A>
+		</td>
+		<td>
+		<INPUT TYPE=text name=q size=31 maxlength=255 value="">
+		<INPUT type=submit name=btnG VALUE="Google Search">
+		<font size=-1>
+		<input type=hidden name=domains value="leafe.com"><br><input type=radio name=sitesearch value=""> WWW <input type=radio name=sitesearch value="leafe.com" checked> leafe.com <br>
+		</font>
+		</td></tr></TABLE>
+		</FORM>
+		<!-- SiteSearch Google -->
+		</div>
+	% endif
+	
+	</div>
+	% endif
+	</div>
+% endif
+</div>
+
+</%def>
+
+<%def name="extraCSS()">
+	.label{
+		text-align: right;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+		font-size: small;
+	}
+	.field	 {
+		text-align: left;
+		font-size: small;
+		font-family: serif;
+	}
+	.boxtable	{
+		font-size: small;
+		border-width: 1px;
+		border-style: dotted;
+		background-color: #DDDDDD;
+	}
+	.dtRadio {
+		text-align: left;
+		font-size: small;
+		font-family: Geneva, Arial, Tahoma, Verdana, sans-serif;
+	}
+	.bordercell {
+		border-width: 1px;
+		border-style: inset;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+		font-size: small;
+	}
+	h4	 {
+		text-align: center;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+	}
+</%def>
+<%def name="extraJS()">
+function setDateFilter() {
+	form = document.searchForm
+	if (hasValidDate(form)) {
+		form.dateRange[5].checked = true ;
+	} else {
+		if (form.dateRange[5].checked == true) {
+			form.dateRange[0].checked = true ;
+		}
+	}
+	return true ;
+}
+
+function hasValidDate(form) {
+	retVal = false ;
+	start = true ;
+	end = true ;
+	if (form.startMonth.value + form.startDay.value + form.startYear.value != "000")	{
+		start = false ;
+		if (form.startMonth.value != "0") {
+			if (form.startDay.value != "0") {
+				if (form.startYear.value != "0")	{
+					start = true ;
+				}
+			}
+		}
+	}
+
+	if (form.endMonth.value + form.endDay.value + form.endYear.value != "000")	{
+		end = false ;
+		if (form.endMonth.value != "0") {
+			if (form.endDay.value != "0") {
+				if (form.endYear.value != "0")	{
+					end = true ;
+				}
+			}
+		}
+	}
+	retVal = (start && end)
+	return retVal ;
+}</%def>

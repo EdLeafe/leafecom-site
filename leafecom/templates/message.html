@@ -1,0 +1,81 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="title()">${c.message.csubject}</%def>
+<%def name="extraCSS()"/>
+<%def name="extraJS()"/>
+
+<%def name="body()">
+
+<table border="0" align="center" style="border: 1px solid; padding-top:30px;">
+ <tr>
+  <td>
+				<table border="0" cellspacing="4" cellpadding="0">
+					<tr align="left" valign="top">
+						<td class="searchResultLabel" nowrap>Subject:</td>
+						<td class="searchResultVal">${c.message.csubject}</td>
+					</tr>
+					<tr align="left" valign="top">
+						<td class="searchResultLabel">Author:</td>
+						<td class="searchResultVal">${c.maskedFrom}</td>
+					</tr>
+					<tr align="left" valign="top">
+						<td class="searchResultLabel">Posted:</td>
+						<td class="searchResultVal">${c.message.tposted.strftime("%Y.%m.%d at %H:%M:%s")}</td>
+					</tr>
+					
+				</table>
+</td>
+<td width="30">&nbsp;</td>
+
+<!-- 
+<td>
+		<table border="0" cellspacing="4" cellpadding="0" class="searchResultNav">
+			<tr valign="middle" tal:condition="prevMsgNum">
+				<td align="right" style="font-size: 85%;" nowrap><a tal:attributes="href python:'/archives/showMsg/'+str(prevMsgNum)">Prior Message</a></td>
+			</tr>
+			<tr valign="middle" tal:condition="nextMsgNum">
+				<td align="right" style="font-size: 85%;" nowrap><a href="" tal:attributes="href python:'/archives/showMsg/'+str(nextMsgNum)">Next Message</a></td>
+			</tr>
+			<tr>
+				<td align="right" style="font-size: 85%;" nowrap><a tal:attributes="href python:'/archives/showFullThd/%s' % request.cMsgNum">View Entire Thread</a></td>
+			</tr>
+			<tr>
+				<td align="right" style="font-size: 85%;" nowrap><a href="" tal:attributes="href python:'/archives/search/'+lst">New Search</a></td>
+			</tr>
+		</table>
+</td>
+ -->
+</tr>
+</table>
+
+<!-- 
+<br>
+<div tal:define="actionMsg here/getResult;" 
+	tal:condition="actionMsg">
+<h3 style="color: darkred; font-weight: bold; text-align:center;" tal:content="actionMsg">Message</h3>
+</div>
+ -->
+<br>
+<table border="0" width="95%" cellspacing="5" cellpadding="3" align="center">
+	<tr>
+		<td></td>
+	
+	</tr>
+	
+	<tr align="center" valign="top">
+		<td>
+		<table border="4" cellspacing="0" cellpadding="6" class="archiveMsgContent" width="95%">
+			<tr align="left" valign="top">
+			<td><pre>${c.displayMessage}</pre>
+			<span class="msgCopyright">&copy;${c.copyYear} ${c.copyName}</span>
+			</tr>
+		</table>
+		</td>
+	
+	</tr>
+</table>
+
+</%def>
+
+
+
