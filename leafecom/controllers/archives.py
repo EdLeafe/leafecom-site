@@ -39,16 +39,16 @@ class ArchivesController(BaseController):
 
 
 	def msg(self, id):
-		session = model.meta.Session
-		query = session.query(Archive)
+		modelSession = model.meta.Session
+		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
 		c.message = query.first()
 		return self._showMessage()
 
 
 	def byMID(self, listname, id):
-		session = model.meta.Session
-		query = session.query(Archive)
+		modelSession = model.meta.Session
+		query = modelSession.query(Archive)
 		query = query.filter_by(cmessageid=id)
 		try:
 			c.message = query.one()
@@ -58,8 +58,8 @@ class ArchivesController(BaseController):
 
 
 	def reportAbuse(self, id):
-		session = model.meta.Session
-		query = session.query(Archive)
+		modelSession = model.meta.Session
+		query = modelSession.query(Archive)
 		query = query.filter(Archive.cmessageid == id)
 		try:
 			msg = query.one()
@@ -124,32 +124,71 @@ Email content:
 #		batchSize							'50'
 
 	def results(self, id=None):
-		if request.method != "POST":
-			abort(403, "Must submit via POST request")
-		# Extract the values submitted
-		prms = request.params
-		c.listname = prms.get("listname")
-		authorRequired = prms.get("authorRequired")
-		phraseRequired = prms.get("phraseRequired")
-		cList = prms.get("cList")
-		wordsForbidden = prms.get("wordsForbidden")
-		wordsRequired = prms.get("wordsRequired")
-		dateRange = prms.get("dateRange")
-		subjectPhraseRequired = prms.get("subjectPhraseRequired")
-		orderBy = prms.get("orderBy")
-		startDay = int(prms.get("startDay"))
-		startMonth = int(prms.get("startMonth"))
-		startYear = int(prms.get("startYear"))
-		endDay = int(prms.get("endDay"))
-		endMonth = int(prms.get("endMonth"))
-		endYear = int(prms.get("endYear"))
-		btnSubmit = prms.get("btnSubmit")
-		batchSize = prms.get("batchSize")
-		chkNF = prms.get("chkNF")
-		chkOT = prms.get("chkOT")
+# 		if request.method != "POST":
+# 			# Returning from the paginator
+# 			return "%s" % session["query"]
+# 			c.paginator.page = int(request.params.get("page", 1))
+# 			return render("/archive_results.html")
+
+		# Extract the values submitted, or use the cached session.
+		def safeGet(nm, cast=None):
+			failFlag = "%^%^%^^^%^%^%^%^^"
+			ret = request.params.get(nm, failFlag)
+			if ret == failFlag:
+				try:
+					ret = session[nm]
+				except KeyError:
+					ret = None
+			else:
+				session[nm] = ret
+				session.save()
+			if cast and ret is not None:
+				ret = cast(ret)
+			return ret
+			
+		c.listname = safeGet("listname")
+		authorRequired = safeGet("authorRequired")
+		phraseRequired = safeGet("phraseRequired")
+		cList = safeGet("cList")
+		wordsForbidden = safeGet("wordsForbidden")
+		wordsRequired = safeGet("wordsRequired")
+		dateRange = safeGet("dateRange")
+		subjectPhraseRequired = safeGet("subjectPhraseRequired")
+		orderBy = safeGet("orderBy")
+		startDay = safeGet("startDay", int)
+		startMonth = safeGet("startMonth", int)
+		startYear = safeGet("startYear", int)
+		endDay = safeGet("endDay", int)
+		endMonth = safeGet("endMonth", int)
+		endYear = safeGet("endYear", int)
+		btnSubmit = safeGet("btnSubmit")
+		batchSize = int(safeGet("batchSize"))
+		# The checkboxes work differently. First, see if there are the normal
+		# fields for a form submission
+		isForm = "btnSubmit" in request.params
+		log.critical("HAS SUBMIT: " + str(isForm))
+		if isForm:
+			chkNF = request.params.get("chkNF")
+			chkOT = request.params.get("chkOT")
+		else:
+			# Use the session cache
+			try:
+				chkNF = session["chkNF"]
+			except KeyError:
+				chkNF = ""
+			session["chkNF"] = chkNF
+			try:
+				chkOT = session["chkOT"]
+			except KeyError:
+				chkOT = ""
+			session["chkOT"] = chkOT
+			session.save()
 		
-		session = model.meta.Session
-		query = session.query(Archive)
+		log.critical("NF: %s" % chkNF)
+		log.critical("OT: %s" % chkOT)
+		
+		modelSession = model.meta.Session
+		query = modelSession.query(Archive)
 		query = query.filter_by(clist=self._listAbbreviation(c.listname))
 
 		# Date range
@@ -184,7 +223,7 @@ Email content:
 			query = query.filter(model.archive_table.c.mtext.like(authComp))
 		if subjectPhraseRequired:
 			query = query.filter(model.archive_table.c.subject.like(subjectPhraseRequired))
-
+		
 		if c.listname == "profox":
 			if chkNF != "on":
 				query = query.filter(model.archive_table.c.csubject.op("not regexp")('[ [:punct:]]NF[ [:punct:]]'))
@@ -203,9 +242,7 @@ Email content:
 					for wd in forbidden if wd]
 			badClause += " ".join(badWords)
 		matchByWordClause = (" ".join((goodClause, badClause))).strip()
-		log.critical("MATCH: >" + matchByWordClause + "<")
 		if matchByWordClause:
-			log.critical("MATCH CLAUSE: %s" % bool(matchByWordClause))
 			query = query.filter(" match (mtext) against (:words IN BOOLEAN MODE) ").params(words=matchByWordClause)
 		
 		orderByTemplate = " ORDER BY %s "
@@ -219,13 +256,14 @@ Email content:
 			# Add the equivalent of 'puresubject'?
 			query = query.order_by("csubject")
 
+		startTime = time.time()
+		c.currentPage = int(request.params.get("page", 1))
+		c.firstMsgOffset = batchSize * (c.currentPage-1)
 		c.paginator = paginate.Page(query,
-				page=int(request.params.get("page", 1)),
+				page=c.currentPage,
 				items_per_page=batchSize)
-# 		startTime = time.time()
-# 		c.results = query.all()
-# 		elapsed = time.time() - startTime
-		c.elapsed = "0.00"		#"%.4f" % elapsed
+		elapsed = time.time() - startTime
+		c.elapsed = "%.4f" % elapsed
 		
 		return render("/archive_results.html")
 

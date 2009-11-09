@@ -27,6 +27,16 @@ body {
 	color: #063903;
 }
 
+.pager_link {
+	border: 1px solid #824200;
+	font-size: 120%;
+}
+
+.pager_count_custom {
+	font-weight: bold;
+	font-size: 120%;
+}
+
 .leftsidebar {
 	background: #caefca;
 	width: 52px;

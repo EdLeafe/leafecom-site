@@ -5,29 +5,30 @@
 <%def name="title()">Search Results</%def>
 
 <%def name="body()">
+	<div>
+		<p>Query time: ${c.elapsed} seconds</p>
+	</div>
   <div>
-% if not c.results:
+% if not len(c.paginator):
 	<div>
 	  <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
 	</div>
 % endif
 
-% if c.results:
+% if len(c.paginator):
 	<div>
-	<%
-		numResults = len(c.results)
-		plural = {1: ""}.get(numResults, "es")
-	%>
-	<h3>Your query returned <span class="queryResNum">${numResults}</span> match${plural} in ${c.elapsed} seconds</h3>
+		<p>${ c.paginator.pager("$link_first $link_previous <span class='pager_count_custom'>$first_item</span> to <span class='pager_count_custom'>$last_item</span> of <span class='pager_count_custom'>$item_count</span> $link_next $link_last") }</p>
+	</div>
+	<div>
 	<table border="0">
 		<tr>
 			<th class="rcell">#</th>
 			<th></th>
 			<th class="lcell" style="text-decoration: underline;">Subject, Author, Date Posted</th>
 		</tr>
-	% for num, msg in enumerate(c.results):
+	% for num, msg in enumerate(c.paginator):
 		<tr class="archiveSearchRow">
-			<td class="rcell">${num}.</td>
+			<td class="rcell">${num + c.firstMsgOffset + 1}.</td>
 			<td></td>
 			<td class="lcell"><a href="/archives/msg/${msg.imsg}">${msg.csubject}</a><br>
 			<%
@@ -46,7 +47,6 @@
 		</tr>
 	% endfor
 	</table>
-	</div>
 	<div style="margin-top: 60px;">
 	<a href="/archives/search/${c.listname}">New Query</a>
 	</div>
