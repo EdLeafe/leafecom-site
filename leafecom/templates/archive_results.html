@@ -2,6 +2,7 @@
 <%page cached="False"/>
 <%def name="extraCSS()"/>
 <%def name="extraJS()"/>
+<%def name="extraHead()" />
 <%def name="title()">Search Results</%def>
 
 <%def name="body()">
@@ -11,15 +12,39 @@
   <div>
 % if not len(c.paginator):
 	<div>
-	  <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
+		<h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
 	</div>
 % endif
 
-% if len(c.paginator):
+<%def name="pager()">
+	<%
+		from webhelpers.html import literal
+		thispage = c.page
+		pagecount = c.total_pages
+		url = c.url.split("?")[0]
+		ret = []
+		total = "Page %s of %s" % (c.page, c.total_pages)
+		if thispage != 1:
+			ret.append("<a href='%s?page=1'>&lt;&lt; First</a>" % url)
+			if pagecount > 1:
+				ret.append("<a href='%s?page=%s'>&lt; Prior</a>" % (url, thispage-1))
+		if pagecount > 1:
+			ret.append("<a href='%s?page=%s'>Next &gt;</a>" % (url, thispage+1))
+		if thispage != pagecount:
+			ret.append("<a href='%s?page=%s'>Last &gt;&gt;</a>" % (url, pagecount))
+		return literal(total + "<br/>" + "&nbsp;&nbsp;&nbsp;".join(ret))
+	%>
+</%def>
+
+% if c.results:
 	<div>
-		<p>${ c.paginator.pager("$link_first $link_previous <span class='pager_count_custom'>$first_item</span> to <span class='pager_count_custom'>$last_item</span> of <span class='pager_count_custom'>$item_count</span> $link_next $link_last") }</p>
-	</div>
-	<div>
+	<%
+		plural = {1: ""}.get(c.numResults, "es")
+	%>
+	<h3>Your query returned <span class="queryResNum">${c.numResults}</span> match${plural} in ${c.elapsed} seconds</h3>
+	<h4>${pager()}</h4>
+	
+	<hr>
 	<table border="0">
 		<tr>
 			<th class="rcell">#</th>
@@ -28,7 +53,7 @@
 		</tr>
 	% for num, msg in enumerate(c.paginator):
 		<tr class="archiveSearchRow">
-			<td class="rcell">${num + c.firstMsgOffset + 1}.</td>
+			<td class="rcell">${num+1}.</td>
 			<td></td>
 			<td class="lcell"><a href="/archives/msg/${msg.imsg}">${msg.csubject}</a><br>
 			<%
@@ -47,6 +72,8 @@
 		</tr>
 	% endfor
 	</table>
+	<h4>${pager()}</h4>
+	</div>
 	<div style="margin-top: 60px;">
 	<a href="/archives/search/${c.listname}">New Query</a>
 	</div>

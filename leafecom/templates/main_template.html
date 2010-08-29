@@ -14,11 +14,11 @@
 	<meta name="keywords" content="Dabo, python, visual foxpro, zope, mvp">
 	
 
-	<meta metal:define-slot="customMeta">
 	<title>${self.title()}</title>	
 	<link rel="stylesheet" type="text/css" href="/leafe.css">
 	<style type="text/css">${self.extraCSS()}</style>
 	<script type="text/javascript">${self.extraJS()}</script>
+	${self.extraHead()}
 </head>
 
 <body>
@@ -40,6 +40,12 @@
 			<td class="leftsidebar">&nbsp;</td>
 			<td class="main">
 				<div style="margin: 10px;">${self.body()}</div>
+				
+				<div style="text-align: center; margin-top: 8em;" >
+					<a  href="http://www.rackspacecloud.com" style="text-decoration:none;  font-family:Arial, Helvetica, sans-serif; font-size:12px; text-align: center; display: block;"><img alt="Powered by Rackspace Cloud Computing" src="http://cdn.cloudfiles.mosso.com/c110782/the-rackspace-cloud-dark-250-wide.png" border="0"/><br />
+				    Powered by Rackspace Cloud Computing</a>
+				</div>
+
 			</td>
 			<td width="160" class="adsense">
 				<div metal:define-slot="adsense">

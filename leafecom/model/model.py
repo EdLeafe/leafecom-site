@@ -16,7 +16,7 @@ archive_table = schema.Table("archive", metadata,
     schema.Column("tposted", types.DateTime(), default=now),
     schema.Column("cmessageid", types.Unicode(128)),
     schema.Column("creplytoid", types.Unicode(128)),
-    schema.Column("mtext", types.Text(), nullable=False)
+    schema.Column("mtext", types.UnicodeText(), nullable=False)
 )
 
 files_table = schema.Table("files", metadata,

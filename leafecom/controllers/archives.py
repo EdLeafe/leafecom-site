@@ -1,15 +1,19 @@
+import email
+import base64
+import quopri
 import smtplib
 import re
 import random
 import datetime
 import time
+import math
 import logging
 
 from sqlalchemy import or_, and_, desc
 from sqlalchemy.orm.exc import NoResultFound
 from pylons import request, response, session, tmpl_context as c
 from pylons.controllers.util import abort, redirect_to
-import webhelpers.paginate as paginate
+from pylons.decorators import jsonify
 import leafecom.model.meta as meta
 import leafecom.lib.helpers as h
 import leafecom.model as model
@@ -19,6 +23,7 @@ from leafecom.lib.base import BaseController, render
 
 log = logging.getLogger(__name__)
 
+oneDay = datetime.timedelta(1)
 
 class ArchivesController(BaseController):
 	SPC_HOLDER = "~~~"
@@ -43,28 +48,72 @@ class ArchivesController(BaseController):
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
 		c.message = query.first()
+		if c.message is None:
+			abort(404, "No message with id=%s exists" % id)
+		c.listname = session.get("listname", "")
+		try:
+			msgIDs = [res.imsg for res in session["fullresults"]]
+		except KeyError:
+			msgIDs = []
+		c.priorLink = ""
+		c.nextLink = ""
+		c.fullThreadLink = "/archives/full_thread/%s" % c.message.imsg
+		try:
+			thisPos = msgIDs.index(c.message.imsg)
+		except ValueError:
+			thisPos = None
+		if thisPos is not None:
+			if thisPos > 0:
+				priorMsg = msgIDs[thisPos - 1]
+				c.priorLink = "/archives/msg/%s" % priorMsg
+			try:
+				nextMsg = msgIDs[thisPos + 1]
+				c.nextLink = "/archives/msg/%s" % nextMsg
+			except IndexError:
+				# This is the last message
+				pass
 		return self._showMessage()
 
 
-	def byMID(self, listname, id):
+	def decode_message(self, id):
+		msgid = str(id)	#request.parameters.get("msgnum")
+		modelSession = model.meta.Session
+		query = modelSession.query(Archive)
+		query = query.filter_by(imsg=msgid)
+		rec = query.first()
+		txt = rec.mtext
+#		try:
+#			decoded = base64.b64decode(txt)
+#		except TypeError:
+#			# Not b64 encoded
+#			decoded = txt
+		decoded = txt
+		# Get rid of quoted-printable, if any
+		final = quopri.decodestring(decoded)
+		rec.mtext = final
+		modelSession.flush()
+		redirect_to("/archives/msg/%s" % msgid)
+		
+
+	def byMID(self, id):
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(cmessageid=id)
 		try:
-			c.message = query.one()
+			message = query.one()
 		except NoResultFound:
 			return "Sorry, no message matches that ID"
-		return self._showMessage()
+		redirect_to(controller="archives", action="msg", id=message.imsg)
 
 
-	def reportAbuse(self, id):
+	def reportAbuse(self, url):
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
-		query = query.filter(Archive.cmessageid == id)
+		query = query.filter(Archive.cmessageid == url)
 		try:
 			msg = query.one()
 		except NoResultFound:
-			return "Sorry, no message matches that ID"
+			return "Sorry, no message matches that mesage ID"
 		msgNum = msg.imsg
 		text = msg.mtext
 		cfrom = msg.cfrom
@@ -80,7 +129,7 @@ class ArchivesController(BaseController):
 
 @@@@@@@@@@@
 MessageID: %s
-Message: http://leafe.com/archives/showMsg/%s
+Message: http://leafe.com/archives/msg/%s
 Reporting IP: %s
 
 Email content:
@@ -88,7 +137,7 @@ Email content:
 
 %s
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-""" % (id, msgNum, reporting_ip, text)
+""" % (url, msgNum, reporting_ip, text)
 		server = smtplib.SMTP("localhost")
 		server.sendmail(frmAddr, toAddr,
 				"To: Ed Leafe <ed@leafe.com>\nSubject: %s\n\n%s" % (subj, mailMsg))
@@ -97,7 +146,8 @@ Email content:
 
 
 	def _showMessage(self):
-		c.maskedFrom = self._maskEmail(c.message.cfrom)
+		c.requestIP = request.remote_addr
+		c.maskedFrom = h.maskEmail(c.message.cfrom)
 		c.displayMessage = self._processMsg(c.message)
 		c.copyYear = c.message.tposted.year
 		c.copyName = c.message.cfrom.split("<")[0].strip().replace("\"", "")
@@ -111,82 +161,100 @@ Email content:
 # 		cList 								'profox' 
 # 		wordsForbidden			 	'NOT APPEAR' 
 # 		wordsRequired 				'MUST APPEAR' 
-# 		dateRange 						'dtLastWeek' 
+# 		dateRange 						'dtLastWeek'
+# 		startDate 						'2010.04.20'
+# 		endDate 						'2010.04.28'
 #		subjectPhraseRequired 	'subj phrase' 
 # 		orderBy							 	'dtDesc' 
+# 		btnSubmit						'   Search!   ' 
+#		batchSize							'50'
+##### NO LONGER USED ##################
 # 		startDay 							'0' 
 # 		startMonth					 	'0' 
 # 		startYear 							'0' 
 # 		endDay				 				'0' 
 # 		endMonth 						'0' 
 # 		endYear 							'0' 
-# 		btnSubmit						'   Search!   ' 
-#		batchSize							'50'
+######################################
 
 	def results(self, id=None):
-# 		if request.method != "POST":
-# 			# Returning from the paginator
-# 			return "%s" % session["query"]
-# 			c.paginator.page = int(request.params.get("page", 1))
-# 			return render("/archive_results.html")
+		c.url = request.url
+		if request.method != "POST":
+			page = int(request.params.get("page", "1"))
+			try:
+				batchSize = session["batchSize"]
+				c.total_pages = session["total_pages"]
+				c.listname = session["listname"]
+			except KeyError:
+				abort(401, "No session found to display results")	
+			page = max(1, page)
+			page = min(page, c.total_pages)
+			# Get the slice
+			recStart = (batchSize * (page-1))
+			recEnd = (batchSize * page) - 1
+			allrecs = session["fullresults"]
+			c.numResults = len(allrecs)
+			c.elapsed = session["elapsed"]
+			c.page = page
+			c.results = allrecs[recStart:recEnd]
+			return render("/archive_results.html")
 
-		# Extract the values submitted, or use the cached session.
-		def safeGet(nm, cast=None):
-			failFlag = "%^%^%^^^%^%^%^%^^"
-			ret = request.params.get(nm, failFlag)
-			if ret == failFlag:
-				try:
-					ret = session[nm]
-				except KeyError:
-					ret = None
-			else:
-				session[nm] = ret
-				session.save()
-			if cast and ret is not None:
-				ret = cast(ret)
-			return ret
-			
-		c.listname = safeGet("listname")
-		authorRequired = safeGet("authorRequired")
-		phraseRequired = safeGet("phraseRequired")
-		cList = safeGet("cList")
-		wordsForbidden = safeGet("wordsForbidden")
-		wordsRequired = safeGet("wordsRequired")
-		dateRange = safeGet("dateRange")
-		subjectPhraseRequired = safeGet("subjectPhraseRequired")
-		orderBy = safeGet("orderBy")
-		startDay = safeGet("startDay", int)
-		startMonth = safeGet("startMonth", int)
-		startYear = safeGet("startYear", int)
-		endDay = safeGet("endDay", int)
-		endMonth = safeGet("endMonth", int)
-		endYear = safeGet("endYear", int)
-		btnSubmit = safeGet("btnSubmit")
-		batchSize = int(safeGet("batchSize"))
-		# The checkboxes work differently. First, see if there are the normal
-		# fields for a form submission
-		isForm = "btnSubmit" in request.params
-		log.critical("HAS SUBMIT: " + str(isForm))
-		if isForm:
-			chkNF = request.params.get("chkNF")
-			chkOT = request.params.get("chkOT")
-		else:
-			# Use the session cache
-			try:
-				chkNF = session["chkNF"]
-			except KeyError:
-				chkNF = ""
-			session["chkNF"] = chkNF
-			try:
-				chkOT = session["chkOT"]
-			except KeyError:
-				chkOT = ""
-			session["chkOT"] = chkOT
-			session.save()
+		# Extract the values submitted
+		prms = request.params
 		
-		log.critical("NF: %s" % chkNF)
-		log.critical("OT: %s" % chkOT)
+		c.params = prms
 		
+		c.listname = prms.get("listname")
+		authorRequired = prms.get("authorRequired")
+		phraseRequired = prms.get("phraseRequired")
+		cList = prms.get("cList")
+		wordsForbidden = prms.get("wordsForbidden")
+		wordsRequired = prms.get("wordsRequired")
+		dateRange = prms.get("dateRange")
+		subjectPhraseRequired = prms.get("subjectPhraseRequired")
+		orderBy = prms.get("orderBy")
+		startDate = prms.get("startDate")
+		if startDate == "START":
+			# Didn't get changed
+			startDate = "1990.01.01"
+		endDate = prms.get("endDate")
+		if endDate == "END":
+			# Didn't get changed
+			endDate = datetime.date.today().strftime("%Y.%m.%d")
+# 		startDay = int(prms.get("startDay"))
+# 		startMonth = int(prms.get("startMonth"))
+# 		startYear = int(prms.get("startYear"))
+# 		endDay = int(prms.get("endDay"))
+# 		endMonth = int(prms.get("endMonth"))
+# 		endYear = int(prms.get("endYear"))
+		btnSubmit = prms.get("btnSubmit")
+		batchSize = int(prms.get("batchSize"))
+		chkNF = prms.get("chkNF")
+		chkOT = prms.get("chkOT")
+		# Save the results
+		session["listname"] = c.listname
+		session["authorRequired"] = authorRequired
+		session["phraseRequired"] = phraseRequired
+		session["cList"] = cList
+		session["wordsForbidden"] = wordsForbidden
+		session["wordsRequired"] = wordsRequired
+		session["dateRange"] = dateRange
+		session["subjectPhraseRequired"] = subjectPhraseRequired
+		session["orderBy"] = orderBy
+		session["startDate"] = startDate
+		session["endDate"] = endDate
+# 		session["startDay"] = startDay
+# 		session["startMonth"] = startMonth
+# 		session["startYear"] = startYear
+# 		session["endDay"] = endDay
+# 		session["endMonth"] = endMonth
+# 		session["endYear"] = endYear
+		session["btnSubmit"] = btnSubmit
+		session["batchSize"] = batchSize
+		session["chkNF"] = chkNF
+		session["chkOT"] = chkOT
+		session.save()
+
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(clist=self._listAbbreviation(c.listname))
@@ -195,7 +263,10 @@ Email content:
 		today = datetime.date.today()
 		tomorrow = today + datetime.timedelta(1)
 		if dateRange != "dtAll":
-			if dateRange == "dtToday":
+			if dateRange == "dtLastYear":
+				start = today.replace(year=today.year-1)
+				end = tomorrow
+			elif dateRange == "dtToday":
 				start = today
 				end = tomorrow
 			elif dateRange == "dtYesterday":
@@ -209,21 +280,23 @@ Email content:
 				end = tomorrow
 			else:
 				# Custom date
+				startYear, startMonth, startDay = [int(part) for part in startDate.split(".")]
+				endYear, endMonth, endDay = [int(part) for part in endDate.split(".")]
 				start = datetime.date(startYear, startMonth, startDay)
-				if (not endYear) or (not endMonth) or (not endDay):
-					end = tomorrow
-				else:
-					end = datetime.date(int(endYear), int(endMonth), int(endDay))
+				end = datetime.date(int(endYear), int(endMonth), int(endDay)) + oneDay
+
 			query = query.filter("tposted>=:start and tposted<:end").params(start=start, end=end)
 
 		if authorRequired:
 			authComp = "%%%s%%" % authorRequired
 			query = query.filter(model.archive_table.c.cfrom.like(authComp))
 		if phraseRequired:
-			query = query.filter(model.archive_table.c.mtext.like(authComp))
+			phraseComp = "%%%s%%" % phraseRequired
+			query = query.filter(model.archive_table.c.mtext.like(phraseComp))
 		if subjectPhraseRequired:
-			query = query.filter(model.archive_table.c.subject.like(subjectPhraseRequired))
-		
+			subjPhraseComp = "%%%s%%" % subjectPhraseRequired
+			query = query.filter(model.archive_table.c.csubject.like(subjPhraseComp))
+
 		if c.listname == "profox":
 			if chkNF != "on":
 				query = query.filter(model.archive_table.c.csubject.op("not regexp")('[ [:punct:]]NF[ [:punct:]]'))
@@ -257,14 +330,20 @@ Email content:
 			query = query.order_by("csubject")
 
 		startTime = time.time()
-		c.currentPage = int(request.params.get("page", 1))
-		c.firstMsgOffset = batchSize * (c.currentPage-1)
-		c.paginator = paginate.Page(query,
-				page=c.currentPage,
-				items_per_page=batchSize)
-		elapsed = time.time() - startTime
-		c.elapsed = "%.4f" % elapsed
+		session["fullresults"] = allrecs = query.all()
+		session["elapsed"] = c.elapsed = "%.4f" % (time.time() - startTime)
+		c.numResults = len(allrecs)
 		
+		page = int(request.params.get("page", "1"))
+		session["total_pages"] = c.total_pages = int(math.ceil(float(c.numResults) / batchSize))
+		page = min(page, c.total_pages)
+		session.save()
+		
+		# Get the slice
+		recStart = (batchSize * (page-1))
+		recEnd = (batchSize * page) - 1
+		c.page = page
+		c.results = allrecs[recStart:recEnd]
 		return render("/archive_results.html")
 
 
@@ -275,8 +354,8 @@ Email content:
 
 
 	def _listAbbreviation(self, val):
-		return {"profox": "p", "prolinux": "l", "propython": "y", "valentina": "v", "codebook": "c", 
-				"dabo-dev": "d", "dabo-users": "u"}.get(val, "")
+		return {"profox": u"p", "prolinux": u"l", "propython": u"y", "valentina": u"v", "codebook": u"c", 
+				"dabo-dev": u"d", "dabo-users": u"u"}.get(val, "")
 
 
 	def _cleanSpaces(self, strVal):
@@ -299,22 +378,16 @@ Email content:
 		return strVal.replace(self.SPC_HOLDER, " ")
 
 
-	def _maskEmail(self, val):
-		pat = re.compile("([^@]+)@([^@\.]+)\.([^@]+)")
-		ats = ("AT", "at", "At", "(AT)", "(at)", "/at/", "/AT/", ".AT.", ".at.") 
-		atString = random.choice(ats)
-		dot1 = "DOT" 
-		dot = ""
-		for ch in dot1:
-			if random.randrange(0,2):
-				dot += "."
-			dot += ch
-		return pat.sub("\g<1> " + atString + " \g<2> " + dot + " \g<3>", val)
-
-
 	def _processMsg(self, rec):
 		msg = rec.mtext.strip()
-		msg = self._maskEmail(msg)
+		c.messagelength = len(msg)
+# 		try:
+# 			msg = email.base64mime.decodestring(msg)
+# 		except Exception:
+# 			# Not base64 encoded
+# 			pass
+# 		msg = email.quoprimime.decode(msg)
+		msg = h.maskEmail(msg)
 		if msg.lower().endswith("</html>"):
 			# This is HTML
 			hilite = False
@@ -325,4 +398,35 @@ Email content:
 			# Change the newlines
 #			msg = msg.replace("\r\n", "<br>").replace("\n", "<br>").replace("\r", "<br>")
 		return msg
+
+
+	def full_thread(self, id):
+		modelSession = model.meta.Session
+		c.listname = session.get("listname", "")
+		query = modelSession.query(Archive)
+		query = query.filter_by(imsg=id)
 		
+		msg = query.first()
+		msgTime = msg.tposted
+		startPeriod = msgTime - datetime.timedelta(90)
+		subj = msg.csubject
+		listabbr = msg.clist
+		
+		pat = re.compile(r"\bre: *", re.I)
+		subj = pat.sub("", subj)
+# 		pat = re.compile(r"[\{\[]ot[\{\]] *", re.I)
+# 		subj = pat.sub("", subj)
+# 		pat = re.compile(r"[\{\[]nf[\{\]] *", re.I)
+# 		subj = pat.sub("", subj)
+# 		pat = re.compile(r"[\{\[]admin[\{\]] *", re.I)
+# 		subj = pat.sub("", subj)
+		subj = "%%%s%%" % subj
+
+		query = modelSession.query(Archive)
+		query = query.filter_by(clist=listabbr)
+		query = query.filter("tposted>=:start").params(start=startPeriod)
+		query = query.filter(model.archive_table.c.csubject.like(subj))
+		query = query.order_by("tposted")
+		c.results = query.all()
+		
+		return render("/full_thread.html")

@@ -264,6 +264,10 @@ a:active {
 	font-family:Helvetica,Arial,Sans-serif ;
 }
 
+.msgHead {
+	text-align: left;
+	padding-left: 4em;
+}
 #invisible {
 	color: white;
 	text-decoration: none; 

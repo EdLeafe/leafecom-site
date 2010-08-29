@@ -6,6 +6,7 @@ class Globals(object):
     life of the application
 
     """
+    CDNBASE = "http://c0118811.cdn.cloudfiles.rackspacecloud.com"
 
     def __init__(self):
         """One instance of Globals is created during application

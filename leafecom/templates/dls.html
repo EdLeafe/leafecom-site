@@ -3,6 +3,7 @@
 <%def name="title()">Downloads</%def>
 <%def name="extraCSS()"/>
 <%def name="extraJS()"/>
+<%def name="extraHead()" />
 <%def name="body()">
 
 <%def name="costtype(rec)">
@@ -29,7 +30,9 @@
 		<p><a href="/dls/cb">VFP Codebook </a></p>
 		<p><a href="/dls/fox">FoxPro 2.x</a></p>
 		<p><a href="/dls/other">Other</a></p>
-		
+	</div>
+	
+	<div style="margin-top: 3em; padding: 1em; text-align: center; border: 1px solid;">Or you can share a file by submitting it on the <a href="/dls/upload">Upload Page</a></div>
 %endif
 
 %if c.section:

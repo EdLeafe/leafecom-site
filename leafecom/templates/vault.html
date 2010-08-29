@@ -1,0 +1,41 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="title()">Vault</%def>
+<%def name="extraCSS()"/>
+<%def name="extraJS()"/>
+<%def name="extraHead()" />
+<%def name="body()">
+
+%if not c.data:
+	<h1>No results were found</h1>
+%endif
+
+%if c.data:
+	<table width="95%" border="0" cellpadding="0" cellspacing="12" style="margin-bottom:10px">
+		% for pkid, site, user, pw, email, misc in c.data:
+		<tr valign="top">
+			<td><b>PKID</b>: ${pkid}</td>	
+		</tr>
+		<tr valign="top">
+			<td><b>Site</b>: ${site}</td>	
+		</tr>
+		<tr valign="top">
+			<td><b>User</b>: ${user}</td>	
+		</tr>
+		<tr valign="top">
+			<td><b>PW</b>: ${pw}</td>	
+		</tr>
+		<tr valign="top">
+			<td><b>Email</b>: ${email}</td>	
+		</tr>
+		<tr valign="top">
+			<td><b>Misc</b>: ${misc}</td>	
+		</tr>
+		<tr valign="top">
+			<td>&nbsp; ${"*"*66}</td>	
+		</tr>
+		% endfor	
+	</table>
+%endif
+
+</%def>

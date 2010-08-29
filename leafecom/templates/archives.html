@@ -1,6 +1,12 @@
 <%inherit file="/main_template.html"/>
 <%page cached="False"/>
 <%def name="title()">Search the Archives</%def>
+<%def name="extraHead()">
+	<link rel="stylesheet" type="text/css" href="/dhtmlxCalendar/codebase/dhtmlxcalendar.css">
+	<script src="/dhtmlxCalendar/codebase/dhtmlxcommon.js"></script>
+	<script src="/dhtmlxCalendar/codebase/dhtmlxcalendar.js"></script>
+	<script>window.dhx_globalImgPath="/dhtmlxCalendar/codebase/codebase/imgs/";</script> 
+</%def>
 
 <%def name="body()">
   <div>
@@ -44,11 +50,11 @@
 	
 	<h3 style="color:darkgreen; font-family: Verdana,Tahoma,Chicago,Arial,sans-serif; font-size:120%;">
 	Search the ${c.properListName} List archives</h3>
-	<table cellpadding="20" class="boxtable">
+	<table cellpadding="20" class="boxtable" width="60%">
 	<tr>
 	<td>
 		<!--This inner table contains all the search fields-->
-		<table border="0" cellspacing="0" cellpadding="4">
+		<table border="0" cellspacing="0" cellpadding="1" width="95%">
 			<tr>
 				<td class="label"><label for="wordsRequired">Words that must appear in post:</label></td>
 				<td class="field"><input type="text" id="wordsRequired" name="wordsRequired"  size="40" maxlength="80" class="field" size="40"></td>
@@ -71,12 +77,15 @@
 			</tr>
 			% if c.listname == "profox":
 			<tr>
-				<td class="label"><label for="chkOT">Check this to include Off-Topic posts:</label></td>
+				<td class="label"><label for="chkOT"><i>Check this to include Off-Topic posts:</i></label></td>
 				<td class="field"><input type="checkbox" id="chkOT" name="chkOT"></td>
 			</tr>
 			<tr>
-				<td class="label"><label for="chkNF">Check this to include NonFox posts:</label></td>
+				<td class="label"><label for="chkNF"><i>Check this to include NonFox posts:</i></label></td>
 				<td class="field"><input type="checkbox" id="chkNF" name="chkNF"></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
 			</tr>
 			% endif
 			
@@ -84,86 +93,67 @@
 				<!--This 'row' contains cells for the DateRange and Order By tables-->
 				<td colspan="2" align="center">
 					<!--Begin the single-row table that will hold the DateRange and Order By tables-->
-					<table border="0" frame="box">
+					<table border="0" frame="box" width="95%">
 					<tr valign="top">
 						<td class="bordercell">
 							<!--Begin the Date Range table-->
-							<table>
+							<table width="95%">
 								<tr>
 									<td class="dtRadio"><h4>Date Range</h4>
-									<label for="dateRangeAll"><input type="radio" id="dateRangeAll" name="dateRange" value="dtAll" checked>All Messages</label><br>
-									<label for="dateRangeToday"><input type="radio" id="dateRangeToday" name="dateRange" value="dtToday">Today Only</label><br>
-									<label for="dateRangeYesterday"><input type="radio" id="dateRangeYesterday" name="dateRange" value="dtYesterday">Yesterday Only</label><br>
-									<label for="dateRangeWeek"><input type="radio" id="dateRangeWeek" name="dateRange" value="dtLastWeek">In the Last Week</label><br>
-									<label for="dateRangeMonth"><input type="radio" id="dateRangeMonth" name="dateRange" value="dtLastMonth">In the Last Month</label><br>
-									<label for="dateRangeCustom"><input type="radio" id="dateRangeCustom" name="dateRange" value="dtCustom">Custom Range</label><br>
-										<table border="0" cellpadding="3">
-											<tr>
-												<td width="20">&nbsp; </td>
-												<td><label for="startMonth">Start:</label></td>
-												<td><select class="searchDateSelect" name="startMonth" onchange="setDateFilter()" id="startMonth">
-												<option selected value="0"> - </option>
-												<option value="1"> Jan</option>
-												<option value="2"> Feb</option>
-												<option value="3"> Mar</option>
-												<option value="4"> Apr</option>
-												<option value="5"> May</option>
-												<option value="6"> Jun</option>
-												<option value="7"> Jul</option>
-												<option value="8"> Aug</option>
-												<option value="9"> Sep</option>
-												<option value="10"> Oct</option>
-												<option value="11"> Nov</option>
-												<option value="12"> Dec</option>
-												</select></td>
-												<td><select class="searchDateSelect" name="startDay" onchange="setDateFilter()">
-												<option selected value="0"> - </option>
-												% for day in xrange(1,32):
-													<option value=${day}>${day}</option>
-												% endfor
-												</select></td>
-												
-												<td><select class="searchDateSelect" name="startYear" onchange="setDateFilter()">
-												<option selected value="0"> - </option>
-												% for yr in xrange(thisYear, 1998, -1):
-													<option value=${yr}>${yr}</option>
-												% endfor
-												</select></td>
-											</tr>
-											<tr>
-												<td width="20">&nbsp; </td>
-												<td><label for="endMonth">End:</label></td>
-												<td><select class="searchDateSelect" name="endMonth" onchange="setDateFilter()" id="endMonth">
-												<option selected value="0"> - </option>
-												<option value="1"> Jan</option>
-												<option value="2"> Feb</option>
-												<option value="3"> Mar</option>
-												<option value="4"> Apr</option>
-												<option value="5"> May</option>
-												<option value="6"> Jun</option>
-												<option value="7"> Jul</option>
-												<option value="8"> Aug</option>
-												<option value="9"> Sep</option>
-												<option value="10"> Oct</option>
-												<option value="11"> Nov</option>
-												<option value="12"> Dec</option>
-												</select></td>
-												<td><select class="searchDateSelect" name="endDay" onchange="setDateFilter()">
-												<option selected value="0"> - </option>
-												% for day in xrange(1,32):
-													<option value=${day}>${day}</option>
-												% endfor
-												</select></td>
-												<td><select class="searchDateSelect" name="endYear" onchange="setDateFilter()">
-												<option selected value="0"> - </option>
-												% for yr in xrange(thisYear, 1998, -1):
-													<option value=${yr}>${yr}</option>
-												% endfor
-												</select></td>
-											</tr>
-										</table>
+									<label for="dateRangeToday"><input type="radio" id="dateRangeToday" name="dateRange"
+											value="dtToday" OnClick="onSelectDateRange(this);">Today Only</label><br>
+									<label for="dateRangeYesterday"><input type="radio" id="dateRangeYesterday" name="dateRange"
+											value="dtYesterday" OnClick="onSelectDateRange(this);">Yesterday Only</label><br>
+									<label for="dateRangeWeek"><input type="radio" id="dateRangeWeek" name="dateRange"
+											value="dtLastWeek" OnClick="onSelectDateRange(this);">In the Last Week</label><br>
+									<label for="dateRangeMonth"><input type="radio" id="dateRangeMonth" name="dateRange"
+											value="dtLastMonth" OnClick="onSelectDateRange(this);" checked>In the Last Month</label><br>
+									<label for="dateRangeYear"><input type="radio" id="dateRangeYear" name="dateRange"
+											value="dtLastYear" OnClick="onSelectDateRange(this);">In the Last Year</label><br>
+									<label for="dateRangeAll"><input type="radio" id="dateRangeAll" name="dateRange"
+											value="dtAll" OnClick="onSelectDateRange(this);">All Messages</label><br>
+									<label for="dateRangeCustom"><input type="radio" id="dateRangeCustom" name="dateRange"
+											value="dtCustom">Custom Range</label><br>
+										<div id="searchDateRangeCalendar" style="margin-left: 2em;">
+										<input name="startDate" id="startDate" type="hidden" value="START">
+										<input name="endDate" id="endDate" type="hidden" value="END">
+										</div>
+										<script>
+											var now = new Date();
+											var currTime = now.getTime();
+											var dayMillis = (1000 * 24 * 60 * 60);
+											var yesterday = new Date(currTime - dayMillis);
+											var weekago = new Date(currTime - (7 * dayMillis));
+											var monthago = new Date();
+											monthago.setMonth(now.getMonth() - 1);
+											var yearago = new Date();
+											yearago.setYear(now.getFullYear() - 1);
+											var allstart = new Date(1999, 0, 1);
+
+											var mDCal = new dhtmlxDblCalendarObject("searchDateRangeCalendar", true,
+													{isMonthEditable: true, isYearEditable: true});
+											var leftCalendar = mDCal.leftCalendar
+											var rightCalendar = mDCal.rightCalendar
+											var thisYear = now.getYear() + 1900;
+											mDCal.setYearsRange(1999, thisYear + 1);
+											mDCal.setDateFormat("%Y.%m.%d");
+											mDCal.setDate(monthago, now);
+											// Note: right now, only the first two events are available.
+											var evts = ["onClick", "onChangeMonth", "onMonthSelect", "onYearSelect"];
+											for (var i=0; i<evts.length; i++) {
+												var evt = evts[i];
+												leftCalendar.attachEvent(evt, onSelectDate);
+												rightCalendar.attachEvent(evt, onSelectDate);
+											}
+											mDCal.draw();
+
+											var form = document.searchForm;
+											var startCal = form.elements["startDate"];
+											var endCal = form.elements["endDate"];
+											var customRangeOption = form.elements["dateRangeCustom"];
+										</script>
+
 									</td>
-								
 								</tr>
 							</table>	
 							<!--End the Date Range table-->
@@ -199,7 +189,7 @@
 								<tr>
 									<td style="text-align:center;">
 										<select id="batchSize" name="batchSize" size="1">
-										% for batchSize in (50, 100, 150, 200, 250):
+										% for batchSize in (250, 200, 150, 100, 50):
 											<option value=${batchSize}>${batchSize}</option>
 										% endfor
 										</select>
@@ -215,7 +205,7 @@
 				</td>
 			
 			</tr>
-		
+			
 			<tr>
 				<td colspan="2" align="center" valign="middle"><input name="btnSubmit" type="submit" value="   Search!   " alt="submit"></td>
 			</tr>
@@ -289,13 +279,14 @@
 		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
 	}
 </%def>
+
 <%def name="extraJS()">
 function setDateFilter() {
 	form = document.searchForm
 	if (hasValidDate(form)) {
-		form.dateRange[5].checked = true ;
+		form.dateRange[6].checked = true ;
 	} else {
-		if (form.dateRange[5].checked == true) {
+		if (form.dateRange[6].checked == true) {
 			form.dateRange[0].checked = true ;
 		}
 	}
@@ -329,4 +320,40 @@ function hasValidDate(form) {
 	}
 	retVal = (start && end)
 	return retVal ;
-}</%def>
+}
+
+function onSelectDate(dt) {
+	var which = null;
+	if (this === mDCal.leftCalendar) {
+		which = startCal;
+	} else {
+		which = endCal;
+	}
+	which.value = this.getFormatedDate("%Y.%m.%d", dt);
+	customRangeOption.checked = true ;
+}
+
+function onSelectDateRange(obj) {
+	var rangeStart;
+	var rangeEnd = now;
+	if (obj.id === "dateRangeYear") {
+		rangeStart = yearago;
+	} else if (obj.id === "dateRangeAll") {
+		rangeStart = allstart;
+	} else if (obj.id === "dateRangeYesterday") {
+		rangeStart = yesterday;
+		rangeEnd = yesterday;
+	} else if (obj.id === "dateRangeWeek") {
+		rangeStart = weekago;
+	} else if (obj.id === "dateRangeMonth") {
+		rangeStart = monthago;
+	} else if (obj.id === "dateRangeToday") {
+		rangeStart = now;
+	}
+	startCal.value = leftCalendar.getFormatedDate("%Y.%m.%d", rangeStart);
+	endCal.value = rightCalendar.getFormatedDate("%Y.%m.%d", now);
+	mDCal.setDate(rangeStart, rangeEnd);
+}
+
+
+</%def>
