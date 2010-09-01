@@ -6,13 +6,10 @@
 <%def name="title()">Search Results</%def>
 
 <%def name="body()">
-	<div>
-		<p>Query time: ${c.elapsed} seconds</p>
-	</div>
   <div>
-% if not len(c.paginator):
+% if not c.results:
 	<div>
-		<h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
+	  <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
 	</div>
 % endif
 
@@ -51,7 +48,7 @@
 			<th></th>
 			<th class="lcell" style="text-decoration: underline;">Subject, Author, Date Posted</th>
 		</tr>
-	% for num, msg in enumerate(c.paginator):
+	% for num, msg in enumerate(c.results):
 		<tr class="archiveSearchRow">
 			<td class="rcell">${num+1}.</td>
 			<td></td>
