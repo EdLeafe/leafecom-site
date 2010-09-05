@@ -9,7 +9,7 @@
   <div>
 % if not c.results:
 	<div>
-	  <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again<a>.</h3>
+		<h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
 	</div>
 % endif
 
@@ -32,6 +32,10 @@
 		return literal(total + "<br/>" + "&nbsp;&nbsp;&nbsp;".join(ret))
 	%>
 </%def>
+
+% if c.from_developer:
+<h1>DEV</h1>
+% endif
 
 % if c.results:
 	<div>

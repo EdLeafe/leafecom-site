@@ -333,7 +333,8 @@ Email content:
 		session["fullresults"] = allrecs = query.all()
 		session["elapsed"] = c.elapsed = "%.4f" % (time.time() - startTime)
 		c.numResults = len(allrecs)
-		
+		c.from_developer = request.remote_addr == "66.67.55.24"
+
 		page = int(request.params.get("page", "1"))
 		session["total_pages"] = c.total_pages = int(math.ceil(float(c.numResults) / batchSize))
 		page = min(page, c.total_pages)
