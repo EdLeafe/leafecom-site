@@ -1,0 +1,18 @@
+<%page cached="False"/>
+<%def name="title()">Beta Feedback</%def>
+<%def name="extraCSS()"/>
+<%def name="extraJS()">
+</%def>
+<%def name="extraHead()" />
+<%def name="body()">
+	<form name="feedback_form" id="feedback_form" action="feedback" method="POST">
+		<input type="hidden" value="${c.src}" id="src" name="src"/>
+		<input type="hidden" value="${c.campaign}" id="campaign" name="campaign"/>
+		<input type="hidden" value="ok" id="action" name="action"/>
+		<p>
+		Please enter your comments below:<br />
+		<textarea id="comment" name="comment" rows="6" cols="50"></textarea><br />
+		</p>
+		<input type="submit" value="Submit Feedback"></input>
+	</form>
+</%def>

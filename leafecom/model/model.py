@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import schema, types
-from sqlalchemy.databases.mysql import MSTinyInteger, MSEnum
+from sqlalchemy.dialects.mysql.base import MSTinyInteger, MSEnum
 from sqlalchemy import orm
 
 metadata = schema.MetaData()
@@ -34,13 +34,23 @@ files_table = schema.Table("files", metadata,
     schema.Column("lpublish", MSTinyInteger, default=0)
 )
 
+med_table = schema.Table("medical_data", metadata,
+	schema.Column("pkid", types.Integer, schema.Sequence("med_seq_id", optional=True), primary_key=True),
+	schema.Column("date_taken", types.Date()),
+	schema.Column("weight", types.Integer),
+	schema.Column("systolic", types.Integer),
+	schema.Column("diastolic", types.Integer)
+)
 
 # Define the classes
 class Archive(object):
 	pass
-class Files(object):
+class Download(object):
+	pass
+class MedData(object):
 	pass
 
 # Map the class to the table
 orm.mapper(Archive, archive_table)
-orm.mapper(Files, files_table)
+orm.mapper(Download, files_table)
+orm.mapper(MedData, med_table)

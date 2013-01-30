@@ -4,7 +4,7 @@ import datetime
 
 """The application's model objects"""
 import sqlalchemy as sa
-from sqlalchemy.databases.mysql import MSTinyInteger, MSEnum
+from sqlalchemy.dialects.mysql.base import MSTinyInteger, MSEnum
 from sqlalchemy import schema, types, orm
 
 from leafecom.model import meta
@@ -57,7 +57,7 @@ archive_table = schema.Table("archive", meta.metadata,
 
 files_table = schema.Table("files", meta.metadata,
 	schema.Column("iid", types.Integer, schema.Sequence("files_seq_id", optional=True), primary_key=True),
-    schema.Column("ctype", types.Unicode(1), default="v"),
+    schema.Column("ctype", types.Unicode(1), default=u"v"),
     schema.Column("cfile", types.Unicode(128)),
     schema.Column("ctitle", types.Unicode(60)),
     schema.Column("mdesc", types.UnicodeText(), nullable=False),
@@ -71,13 +71,35 @@ files_table = schema.Table("files", meta.metadata,
     schema.Column("uploaded", MSTinyInteger, default=0)
 )
 
+med_table = schema.Table("medical_data", meta.metadata,
+	schema.Column("pkid", types.Integer, schema.Sequence("med_seq_id", optional=True), primary_key=True),
+	schema.Column("date_taken", types.Date()),
+	schema.Column("weight", types.Integer),
+	schema.Column("systolic", types.Integer),
+	schema.Column("diastolic", types.Integer)
+)
+
+feedback_table = schema.Table("feedback", meta.metadata,
+	schema.Column("pkid", types.Integer, schema.Sequence("fb_med_seq_id", optional=True), primary_key=True),
+	schema.Column("received", types.DateTime(), default=now),
+	schema.Column("src", types.Unicode),
+	schema.Column("campaign", types.Unicode),
+	schema.Column("comment", types.UnicodeText)
+)
+
 
 # Define the classes
 class Archive(object):
 	pass
 class Download(object):
 	pass
+class MedData(object):
+	pass
+class Feedback(object):
+	pass
 
 # Map the class to the table
 orm.mapper(Archive, archive_table)
 orm.mapper(Download, files_table)
+orm.mapper(MedData, med_table)
+orm.mapper(Feedback, feedback_table)

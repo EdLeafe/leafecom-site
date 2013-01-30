@@ -1,0 +1,165 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="title()">Medical Records</%def>
+<%def name="extraHead()">
+</%def>
+
+<%def name="body()">
+  <div>
+
+<%
+	import datetime
+	today = datetime.date.today()
+%>
+
+	<div>
+
+	<form method="POST" action="/medical/data_entry" name="entryForm">
+	<table cellpadding="20" class="boxtable" width="60%">
+	<tr>
+	<td>
+		<table border="0" cellspacing="0" cellpadding="1" width="95%">
+			<tr>
+				<td class="label"><label for="date">Date</label></td>
+				<td class="field"><input type="text" id="date" name="date" size="40" maxlength="80" class="field" size="40" value=${today}></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="weight">Weight</label></td>
+				<td class="field"><input type="text" id="weight" name="weight" size="40" maxlength="80" class="field" size="40"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="systolic">Systolic</label></td>
+				<td class="field"><input type="text" id="systolic" name="systolic" size="40" maxlength="80" class="field" size="40"></td>
+			</tr>
+			<tr>
+				<td class="label"><label for="diastolic">Diastolic</label></td>
+				<td class="field"><input type="text" id="diastolic" name="diastolic" size="40" maxlength="80" class="field" size="40"></td>
+			</tr>
+			<tr>
+				<td colspan="2" align="center" valign="middle"><input name="btnSubmit" type="submit" value="   Submit!   " alt="submit"></td>
+			</tr>
+		</table>
+		
+	</td>
+	</tr>
+	</table>
+	
+	</form>
+	<h3>There are ${c.reccount} records entered</h3>
+	
+	</div>
+</div>
+
+</%def>
+
+<%def name="extraCSS()">
+	.label{
+		text-align: right;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+		font-size: small;
+	}
+	.field	 {
+		text-align: left;
+		font-size: small;
+		font-family: serif;
+	}
+	.boxtable	{
+		font-size: small;
+		border-width: 1px;
+		border-style: dotted;
+		background-color: #DDDDDD;
+	}
+	.dtRadio {
+		text-align: left;
+		font-size: small;
+		font-family: Geneva, Arial, Tahoma, Verdana, sans-serif;
+	}
+	.bordercell {
+		border-width: 1px;
+		border-style: inset;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+		font-size: small;
+	}
+	h4	 {
+		text-align: center;
+		font-family: Tahoma, Verdana, Geneva, Arial, sans-serif;
+	}
+</%def>
+
+<%def name="extraJS()">
+function setDateFilter() {
+	form = document.searchForm
+	if (hasValidDate(form)) {
+		form.dateRange[6].checked = true ;
+	} else {
+		if (form.dateRange[6].checked == true) {
+			form.dateRange[0].checked = true ;
+		}
+	}
+	return true ;
+}
+
+function hasValidDate(form) {
+	retVal = false ;
+	start = true ;
+	end = true ;
+	if (form.startMonth.value + form.startDay.value + form.startYear.value != "000")	{
+		start = false ;
+		if (form.startMonth.value != "0") {
+			if (form.startDay.value != "0") {
+				if (form.startYear.value != "0")	{
+					start = true ;
+				}
+			}
+		}
+	}
+
+	if (form.endMonth.value + form.endDay.value + form.endYear.value != "000")	{
+		end = false ;
+		if (form.endMonth.value != "0") {
+			if (form.endDay.value != "0") {
+				if (form.endYear.value != "0")	{
+					end = true ;
+				}
+			}
+		}
+	}
+	retVal = (start && end)
+	return retVal ;
+}
+
+function onSelectDate(dt) {
+	var which = null;
+	if (this === mDCal.leftCalendar) {
+		which = startCal;
+	} else {
+		which = endCal;
+	}
+	which.value = this.getFormatedDate("%Y.%m.%d", dt);
+	customRangeOption.checked = true ;
+}
+
+function onSelectDateRange(obj) {
+	var rangeStart;
+	var rangeEnd = now;
+	if (obj.id === "dateRangeYear") {
+		rangeStart = yearago;
+	} else if (obj.id === "dateRangeAll") {
+		rangeStart = allstart;
+	} else if (obj.id === "dateRangeYesterday") {
+		rangeStart = yesterday;
+		rangeEnd = yesterday;
+	} else if (obj.id === "dateRangeWeek") {
+		rangeStart = weekago;
+	} else if (obj.id === "dateRangeMonth") {
+		rangeStart = monthago;
+	} else if (obj.id === "dateRangeToday") {
+		rangeStart = now;
+	}
+	startCal.value = leftCalendar.getFormatedDate("%Y.%m.%d", rangeStart);
+	endCal.value = rightCalendar.getFormatedDate("%Y.%m.%d", now);
+	mDCal.setDate(rangeStart, rangeEnd);
+}
+
+
+</%def>

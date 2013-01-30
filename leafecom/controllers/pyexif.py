@@ -7,10 +7,7 @@ from leafecom.lib.base import BaseController, render
 
 log = logging.getLogger(__name__)
 
-class ConsultingController(BaseController):
+class PyexifController(BaseController):
 
-	def index(self, id=None):
-		if id == "resume":
-			return render("/resume.html")
-		else:
-			return render("/consulting.html")
+    def index(self):
+		return render("pyexif.html")

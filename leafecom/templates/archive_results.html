@@ -7,7 +7,11 @@
 
 <%def name="body()">
   <div>
-% if not c.results:
+% if c.error_message:
+	<div>
+		<h3 style="color: red">An error was encountered: ${c.error_message}. <br />Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
+	</div>
+% elif not c.results:
 	<div>
 		<h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
 	</div>
@@ -37,7 +41,7 @@
 <h1>DEV</h1>
 % endif
 
-% if c.results:
+% if c.results and not c.error_message:
 	<div>
 	<%
 		plural = {1: ""}.get(c.numResults, "es")

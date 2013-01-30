@@ -2,7 +2,7 @@ import logging
 import os
 
 from pylons import request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to, redirect
+from pylons.controllers.util import abort, redirect, redirect
 from pylons import app_globals
 from leafecom.lib.base import BaseController, render
 

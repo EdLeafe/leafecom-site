@@ -1,11 +1,17 @@
-import os
 import logging
+import os
 import random
+import time
 
 from pylons import request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to
+from pylons.controllers.util import abort, redirect
 
 from leafecom.lib.base import BaseController, render
+
+from subprocess import Popen, PIPE
+
+def runproc(cmd):
+	return Popen([cmd], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
 
 log = logging.getLogger(__name__)
 colors = ['indigo', 'gold', 'hotpink', 'firebrick', 'indianred', 'yellow', 'mistyrose', 
@@ -49,13 +55,32 @@ class DelspamController(BaseController):
 			bg = "tan"
 		else:
 			bg = "lightsteelblue"
+
+		if not os.path.exists(fname):
+			msg = "<h1 style='color: red'>File '%s' does not exist.</h1>" % (id, )
+			return tmplt % (bg, msg)
 		try:
-			os.unlink(fname)
+			self._archive(fname)
 			#msg = ("<h2 style='color: %s'>File %s has been deleted.</h2>" % (random.choice(colors), id) for i in xrange(99))
 			msg = "<h1 style='color: black'>File %s has been deleted.</h1>" % id
 		except OSError, e:
 			#msg = ("<h2 style='color: %s'>Couldn't delete %s: %s</h2>" % (random.choice(colors), id, e) for i in xrange(99))
-			msg = "<h1 style='color: red'>Couldn't delete %s: %s</h1>" % (id, e[1])
+			msg = "<h1 style='color: red'>Couldn't delete %s: %s</h1>" % (id, e)
 		#return tmplt % (bg, "\n".join(msg))
 		return tmplt % (bg, msg)
 
+
+	def _archive(self, fname):
+		dirname, basename = os.path.split(fname)
+		os.chdir(dirname)
+		basebasename = basename.split(".")[0]
+		tm = int(time.time())
+		tarname = "%(basebasename)s-%(tm)s.tgz" % locals()
+		cmd = "tar zcf %(tarname)s %(basename)s" % locals()
+		tarproc = runproc(cmd)
+		tarproc.wait()
+		tarErr = tarproc.stderr.read()
+		if tarErr:
+			raise OSError(tarErr)
+		else:
+			os.unlink(fname)

@@ -4,7 +4,7 @@ import datetime
 import os
 
 from pylons import request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to
+from pylons.controllers.util import abort, redirect
 
 from leafecom.lib.base import BaseController, render
 

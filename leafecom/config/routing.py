@@ -1,5 +1,4 @@
-"""Routes configuration
-
+"""
 The more specific and detailed routes should be defined first so they
 may take precedent over the more generic routes. For more information
 refer to the routes manual at http://routes.groovie.org/docs/
@@ -26,13 +25,18 @@ def make_map():
     map.connect("/{action}/", controller="lisaf", conditions={"sub_domain": ["lisaforrello", "lisaforello", "lisaf"]})
 
     map.connect("/reportAbuse/*url", controller="archives", action="reportAbuse")
+    map.connect("/ip/*format", controller="ip", action="index")
     map.connect("/download/*url", controller="download", action="GET")
     map.connect("/dls/upload_file", controller="dls", action="upload_file")
     map.connect("/dls/upload", controller="dls", action="upload")
     map.connect("/dls/upload/", controller="dls", action="upload")
-    map.connect("/{controller}/{id}")
-    map.connect("/{controller}/{action}")
-    map.connect("/{controller}/{action}/")
+    map.connect("/medical/data_entry", controller="medical", action="data_entry")
+    map.connect("/medical/data_entry/", controller="medical", action="data_entry")
+    map.connect("/email/search", controller="addalias", action="search")
+    map.connect("/email/search/*term", controller="addalias", action="search")
+    map.connect("/{controller}/{id}", action="index")
+    map.connect("/{controller}/{action}", action="index")
+    map.connect("/{controller}/{action}/", action="index")
 
     # For the vault controller
     map.connect("/vault/{key}/{id}", controller="vault", action="index")

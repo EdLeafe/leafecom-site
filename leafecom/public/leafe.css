@@ -414,3 +414,5 @@ div.nicetitle p.destination {
 }
 
 .casualtyNumber { font-weight: bold; }
+
+a.invisible { color: white; background: white; }

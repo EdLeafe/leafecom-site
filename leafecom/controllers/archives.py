@@ -11,8 +11,8 @@ import logging
 
 from sqlalchemy import or_, and_, desc
 from sqlalchemy.orm.exc import NoResultFound
-from pylons import request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to
+from pylons import request, response, session, url, tmpl_context as c
+from pylons.controllers.util import abort, redirect
 from pylons.decorators import jsonify
 import leafecom.model.meta as meta
 import leafecom.lib.helpers as h
@@ -24,6 +24,7 @@ from leafecom.lib.base import BaseController, render
 log = logging.getLogger(__name__)
 
 oneDay = datetime.timedelta(1)
+
 
 class ArchivesController(BaseController):
 	SPC_HOLDER = "~~~"
@@ -43,11 +44,13 @@ class ArchivesController(BaseController):
 		return render("/archives.html")
 
 
-	def msg(self, id):
+	def msg(self, id=None):
+		if id is None:
+			abort(400, "Sorry, a message ID is required.")
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
-		c.message = query.first()
+		c.message = self._query_first(query)
 		if c.message is None:
 			abort(404, "No message with id=%s exists" % id)
 		c.listname = session.get("listname", "")
@@ -80,7 +83,8 @@ class ArchivesController(BaseController):
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=msgid)
-		rec = query.first()
+#		rec = query.first()
+		rec = self._query_first(query)
 		txt = rec.mtext
 #		try:
 #			decoded = base64.b64decode(txt)
@@ -92,32 +96,44 @@ class ArchivesController(BaseController):
 		final = quopri.decodestring(decoded)
 		rec.mtext = final
 		modelSession.flush()
-		redirect_to("/archives/msg/%s" % msgid)
+		redirect("/archives/msg/%s" % msgid)
 		
 
-	def byMID(self, id):
+	def byMID(self, id=None):
+		if id is None:
+			abort(400, "Sorry, a message ID is required.")
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(cmessageid=id)
 		try:
-			message = query.one()
+			message = self._query_first(query)
 		except NoResultFound:
+			modelSession.rollback()
 			return "Sorry, no message matches that ID"
-		redirect_to(controller="archives", action="msg", id=message.imsg)
+		if not message:
+			return "Sorry, no message matches that ID"
+		redirect(url(controller="archives", action="msg", id=message.imsg))
 
 
 	def reportAbuse(self, url):
+		# Added 2012.09.17 because this seems to be a google bot.
+		# Added 2013.01.06: getting a lot of abuse reports from IPs beginning
+		#    with 74.125.18[67]
+		reporting_ip = request.remote_addr
+		if reporting_ip == "66.249.73.138" or reporting_ip[:11] in ("74.125.186.", "74.125.187."):
+			return "Sorry, you seem to be a bot."
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter(Archive.cmessageid == url)
 		try:
-			msg = query.one()
+			msg = self._query_first(query)
 		except NoResultFound:
+			modelSession.rollback()
 			return "Sorry, no message matches that mesage ID"
 		msgNum = msg.imsg
 		text = msg.mtext
 		cfrom = msg.cfrom
-		reporting_ip = request.remote_addr
+		
 		# Need to create the model for the abuse table
 		#context.addToAbuse(cmessageid=msgID, cfrom=cfrom, reporting_ip= reporting_ip)
 
@@ -138,6 +154,7 @@ Email content:
 %s
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 """ % (url, msgNum, reporting_ip, text)
+		mailMsg = mailMsg.encode("utf8")
 		server = smtplib.SMTP("localhost")
 		server.sendmail(frmAddr, toAddr,
 				"To: Ed Leafe <ed@leafe.com>\nSubject: %s\n\n%s" % (subj, mailMsg))
@@ -178,7 +195,9 @@ Email content:
 ######################################
 
 	def results(self, id=None):
-		c.url = request.url
+		c.error_message = ""
+		c.url = request.remote_addr
+		c.from_developer = request.remote_addr == h.get_sa_home_ip()
 		if request.method != "POST":
 			page = int(request.params.get("page", "1"))
 			try:
@@ -186,7 +205,7 @@ Email content:
 				c.total_pages = session["total_pages"]
 				c.listname = session["listname"]
 			except KeyError:
-				abort(401, "No session found to display results")	
+				abort(403, "No session found to display results")	
 			page = max(1, page)
 			page = min(page, c.total_pages)
 			# Get the slice
@@ -197,6 +216,14 @@ Email content:
 			c.elapsed = session["elapsed"]
 			c.page = page
 			c.results = allrecs[recStart:recEnd]
+
+			try:
+				c.results[0].imsg
+			except IndexError, e:
+				# No results; ignore
+				pass
+			except AttributeError, e:
+				c.error_message = "Your session information has been lost."
 			return render("/archive_results.html")
 
 		# Extract the values submitted
@@ -221,12 +248,6 @@ Email content:
 		if endDate == "END":
 			# Didn't get changed
 			endDate = datetime.date.today().strftime("%Y.%m.%d")
-# 		startDay = int(prms.get("startDay"))
-# 		startMonth = int(prms.get("startMonth"))
-# 		startYear = int(prms.get("startYear"))
-# 		endDay = int(prms.get("endDay"))
-# 		endMonth = int(prms.get("endMonth"))
-# 		endYear = int(prms.get("endYear"))
 		btnSubmit = prms.get("btnSubmit")
 		batchSize = int(prms.get("batchSize"))
 		chkNF = prms.get("chkNF")
@@ -243,12 +264,6 @@ Email content:
 		session["orderBy"] = orderBy
 		session["startDate"] = startDate
 		session["endDate"] = endDate
-# 		session["startDay"] = startDay
-# 		session["startMonth"] = startMonth
-# 		session["startYear"] = startYear
-# 		session["endDay"] = endDay
-# 		session["endMonth"] = endMonth
-# 		session["endYear"] = endYear
 		session["btnSubmit"] = btnSubmit
 		session["batchSize"] = batchSize
 		session["chkNF"] = chkNF
@@ -285,25 +300,25 @@ Email content:
 				start = datetime.date(startYear, startMonth, startDay)
 				end = datetime.date(int(endYear), int(endMonth), int(endDay)) + oneDay
 
-			query = query.filter("tposted>=:start and tposted<:end").params(start=start, end=end)
+			query = query.filter(u"tposted>=:start and tposted<:end").params(start=start, end=end)
 
 		if authorRequired:
-			authComp = "%%%s%%" % authorRequired
+			authComp = u"%%%s%%" % authorRequired
 			query = query.filter(model.archive_table.c.cfrom.like(authComp))
 		if phraseRequired:
-			phraseComp = "%%%s%%" % phraseRequired
+			phraseComp = u"%%%s%%" % phraseRequired
 			query = query.filter(model.archive_table.c.mtext.like(phraseComp))
 		if subjectPhraseRequired:
-			subjPhraseComp = "%%%s%%" % subjectPhraseRequired
+			subjPhraseComp = u"%%%s%%" % subjectPhraseRequired
 			query = query.filter(model.archive_table.c.csubject.like(subjPhraseComp))
 
 		if c.listname == "profox":
 			if chkNF != "on":
-				query = query.filter(model.archive_table.c.csubject.op("not regexp")('[ [:punct:]]NF[ [:punct:]]'))
+				query = query.filter(model.archive_table.c.csubject.op("not regexp")(u'[ [:punct:]]NF[ [:punct:]]'))
 			if chkOT != "on":
-				query = query.filter(model.archive_table.c.csubject.op("not regexp")('[ [:punct:]]OT[ [:punct:]]'))
+				query = query.filter(model.archive_table.c.csubject.op("not regexp")(u'[ [:punct:]]OT[ [:punct:]]'))
 
-		matchByWordClause = goodClause = badClause = ""
+		matchByWordClause = goodClause = badClause = u""
 		if wordsRequired:
 			required = self._cleanSpaces(wordsRequired).split()
 			goodWords = ["+" + self._restoreSpaces(wd).replace("'", "\\'")
@@ -314,11 +329,11 @@ Email content:
 			badWords = ["-" + self._restoreSpaces(wd).replace("'", "\\'")
 					for wd in forbidden if wd]
 			badClause += " ".join(badWords)
-		matchByWordClause = (" ".join((goodClause, badClause))).strip()
+		matchByWordClause = (u" ".join((goodClause, badClause))).strip()
 		if matchByWordClause:
-			query = query.filter(" match (mtext) against (:words IN BOOLEAN MODE) ").params(words=matchByWordClause)
+			query = query.filter(u" match (mtext) against (:words IN BOOLEAN MODE) ").params(words=matchByWordClause)
 		
-		orderByTemplate = " ORDER BY %s "
+		orderByTemplate = u" ORDER BY %s "
 		if orderBy == "dtDesc":
 			query = query.order_by(desc("tposted"))
 		elif orderBy == "dtAsc":
@@ -330,10 +345,14 @@ Email content:
 			query = query.order_by("csubject")
 
 		startTime = time.time()
-		session["fullresults"] = allrecs = query.all()
+		session["fullresults"] = allrecs = self._query_all(query)
+#		try:
+#			session["fullresults"] = allrecs = query.all()
+#		except Exception as e:
+#			modelSession.rollback()
+#			raise
 		session["elapsed"] = c.elapsed = "%.4f" % (time.time() - startTime)
 		c.numResults = len(allrecs)
-		c.from_developer = request.remote_addr == "66.67.55.24"
 
 		page = int(request.params.get("page", "1"))
 		session["total_pages"] = c.total_pages = int(math.ceil(float(c.numResults) / batchSize))
@@ -401,26 +420,38 @@ Email content:
 		return msg
 
 
-	def full_thread(self, id):
+	@h.retry_lost
+	def _query_first(self, query):
+		return query.first()
+
+
+	@h.retry_lost
+	def _query_all(self, query):
+		return query.all()
+
+
+	def full_thread(self, id=None):
+		if id is None:
+			abort(400, "Sorry, a message ID is required.")
 		modelSession = model.meta.Session
+		c.error_message = ""
 		c.listname = session.get("listname", "")
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
-		
-		msg = query.first()
-		msgTime = msg.tposted
+		msg = self._query_first(query)
+		try:
+			msgTime = msg.tposted
+		except AttributeError, e:
+			# No message match the subject
+			log.warn("Full thread failed for id=%s" % id)
+			c.results = []
+			return render("/archive_results.html")
 		startPeriod = msgTime - datetime.timedelta(90)
 		subj = msg.csubject
-		listabbr = msg.clist
+		listabbr = unicode(msg.clist)
 		
 		pat = re.compile(r"\bre: *", re.I)
 		subj = pat.sub("", subj)
-# 		pat = re.compile(r"[\{\[]ot[\{\]] *", re.I)
-# 		subj = pat.sub("", subj)
-# 		pat = re.compile(r"[\{\[]nf[\{\]] *", re.I)
-# 		subj = pat.sub("", subj)
-# 		pat = re.compile(r"[\{\[]admin[\{\]] *", re.I)
-# 		subj = pat.sub("", subj)
 		subj = "%%%s%%" % subj
 
 		query = modelSession.query(Archive)
@@ -428,6 +459,5 @@ Email content:
 		query = query.filter("tposted>=:start").params(start=startPeriod)
 		query = query.filter(model.archive_table.c.csubject.like(subj))
 		query = query.order_by("tposted")
-		c.results = query.all()
-		
+		c.results = self._query_all(query)
 		return render("/full_thread.html")

@@ -9,7 +9,7 @@ import smtplib
 
 from sqlalchemy import desc
 from pylons import request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to
+from pylons.controllers.util import abort, redirect
 from pylons.decorators.rest import restrict
 import leafecom.model.meta as meta
 import leafecom.lib.helpers as h
@@ -21,7 +21,6 @@ log = logging.getLogger(__name__)
 
 
 class DlsController(BaseController):
-
 	def index(self, id=None):
 		c.section = None
 		if id:
@@ -29,13 +28,13 @@ class DlsController(BaseController):
 					"fox": "f", "taskpane": "t", "reportlistener": "r"}
 			nameDict = {"vfp": "Visual FoxPro", "python": "Python", "dabo": "Dabo", "osx": "OS X", 
 					"cb": "Codebook", "fox": "FoxPro 2.x", "taskpane": "Taskpane", "reportlistener": "ReportListener"}
-			c.section = sectionDict.get(id, "o")
+			c.section = unicode(sectionDict.get(id, "o"))
 			c.sectionName = nameDict.get(id, "Other")
-			q = model.meta.Session.query(model.Download)
+			q = meta.Session.query(model.Download)
 			q = q.filter_by(ctype=c.section)
 			q = q.filter_by(lpublish=1)
 			q = q.order_by(desc("dlastupd"))
-			c.downloads = q.all()
+			c.downloads = self._query_all(q)
 		return render("dls.html")
 
 
@@ -44,10 +43,20 @@ class DlsController(BaseController):
 		return render ("upload.html")
 
 
+	@h.retry_lost
+	def _query_all(self, query):
+		return query.all()
+
+
 	@restrict("POST")
 	def upload_file(self):
 		post = request.POST
-		newfile = post["newfile"]
+
+		log.error("%s" % str(post.keys()))
+
+		newfile = post.get("newfile")
+		if (newfile is None) or not newfile.filename:
+			abort(400, "No file specified")
 		target_file = os.path.join("/var/www/uploads", newfile.filename.replace(os.sep, "_"))
 		file_obj = file(target_file, "wb")
 		shutil.copyfileobj(newfile.file, file_obj)
@@ -59,9 +68,11 @@ class DlsController(BaseController):
 			fsize = "%.1fMB" % (kbytes / 1024.0)
 		else:
 			fsize = "%.1fK" % kbytes
-		cdnBase = "http://cdn.cloudfiles.mosso.com/c118811"
+		# Don't use the CDN; use the generic download URL that will redirect.
+		cdnBase = "http://c118811.r11.cf0.rackcdn.com"
+		dlBase = "http://leafe.com/download"
 		fldr = {"c": "cb", "d": "dabo"}.get(post["file_section"], "")
-		cfile = os.path.join(cdnBase, fldr, newfile.filename)
+		cfile = os.path.join(dlBase, fldr, newfile.filename)
 
 		dl = model.Download()
 		dl.ctype = post["file_section"]
@@ -75,8 +86,13 @@ class DlsController(BaseController):
 		dl.cauthoremail = post["file_email"]
 		dl.dlastupd = datetime.date.today()
 		dl.lpublish = False
-		model.meta.Session.add(dl)
-		model.meta.Session.commit()
+
+		@h.retry_lost
+		def _add_dl_model():
+			model.meta.Session.add(dl)
+			model.meta.Session.commit()
+
+		_add_dl_model()
 
 		body = """Originating IP = %s
 Section = %s
