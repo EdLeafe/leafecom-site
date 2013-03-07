@@ -119,8 +119,10 @@ class ArchivesController(BaseController):
 		# Added 2012.09.17 because this seems to be a google bot.
 		# Added 2013.01.06: getting a lot of abuse reports from IPs beginning
 		#    with 74.125.18[67]
+		bad_pat = re.compile(r"74.125.18\d.\d{1,3}")
 		reporting_ip = request.remote_addr
-		if reporting_ip == "66.249.73.138" or reporting_ip[:11] in ("74.125.186.", "74.125.187."):
+		if reporting_ip == "66.249.73.138" or bad_pat.match(reporting_ip):
+			log.info("Abuse bot detected; ip=%s" % reporting_ip)
 			return "Sorry, you seem to be a bot."
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
@@ -436,6 +438,8 @@ Email content:
 		modelSession = model.meta.Session
 		c.error_message = ""
 		c.listname = session.get("listname", "")
+		c.url = request.remote_addr
+		c.from_developer = request.remote_addr == h.get_sa_home_ip()
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
 		msg = self._query_first(query)
