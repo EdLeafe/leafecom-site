@@ -3,9 +3,10 @@
 
 from leafecom.lib.base import BaseController, render
 
-class DanController(BaseController):
+
+class OregonController(BaseController):
 	def index(self):
-		return render("/dan.html")
+		return render("/oregon.html")
 
 	def test(self):
 		return render("/oauthtest.html")

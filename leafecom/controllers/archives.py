@@ -50,8 +50,9 @@ class ArchivesController(BaseController):
 		modelSession = model.meta.Session
 		query = modelSession.query(Archive)
 		query = query.filter_by(imsg=id)
-		c.message = self._query_first(query)
-		if c.message is None:
+        try:
+            c.message = self._query_first(query)
+        except NoResultFound:
 			abort(404, "No message with id=%s exists" % id)
 		c.listname = session.get("listname", "")
 		try:
@@ -124,7 +125,26 @@ class ArchivesController(BaseController):
 		if reporting_ip == "66.249.73.138" or bad_pat.match(reporting_ip):
 			log.info("Abuse bot detected; ip=%s" % reporting_ip)
 			return "Sorry, you seem to be a bot."
+
+		def prove_it(wrong=False):
+			f1 = random.randint(1, 8)
+			f2 = random.randint(1, 8)
+			log.warn("WRONG: %s" % wrong)
+			c.wrong = wrong
+			c.question = "How much is %s + %s?" % (f1, f2)
+			c.expected = f1 + f2
+			c.url = url
+			return render("/human.html")
+
 		modelSession = model.meta.Session
+		proof_answer = request.params.get("answer")
+		if proof_answer is None:
+			# Make sure this is a human
+			return prove_it()
+		expected = request.params.get("expected")
+		if not expected == proof_answer:
+			return prove_it(wrong=True)
+
 		query = modelSession.query(Archive)
 		query = query.filter(Archive.cmessageid == url)
 		try:
@@ -424,7 +444,10 @@ Email content:
 
 	@h.retry_lost
 	def _query_first(self, query):
-		return query.first()
+		ret = query.first()
+		if ret is None:
+			raise NoResultFound
+		return ret
 
 
 	@h.retry_lost

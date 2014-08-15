@@ -18,6 +18,7 @@ def make_map():
     map.connect("/error/{action}/{id}", controller="error")
 
     # CUSTOM ROUTES HERE
+    map.connect("/oregon", controller="oregon", action="index")
     
     map.subdomains = True
 
