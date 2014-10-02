@@ -5,14 +5,15 @@ body {
 .mainheading {
    color: #366933 ;
    background: white ;
-   text-align: right ;
+   text-align: left ;
    font-family: Optima, Arial, Sans-serif ;
    font-size: 140% ;
+   padding: 10px;
 }
 
 .navbar {
 	color: #366933;
-	background: #caefca;
+	background: #cfffc0;
 	text-align: left;
 	font-family: Optima, Arial, Sans-serif;
 	font-size: 90%;
@@ -39,6 +40,7 @@ body {
 
 .leftsidebar {
 	background: #caefca;
+	background: #cfffc0;
 	width: 52px;
 }
 
