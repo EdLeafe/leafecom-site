@@ -31,6 +31,7 @@ def make_map():
     map.connect("/dls/upload_file", controller="dls", action="upload_file")
     map.connect("/dls/upload", controller="dls", action="upload")
     map.connect("/dls/upload/", controller="dls", action="upload")
+    map.connect("/downloads/", controller="dls", action="index")
     map.connect("/medical/data_entry", controller="medical", action="data_entry")
     map.connect("/medical/data_entry/", controller="medical", action="data_entry")
     map.connect("/email/search", controller="addalias", action="search")
@@ -48,9 +49,8 @@ def make_map():
     map.connect("/{controller}", action="index")
     map.connect("/{controller}/", action="index")
     map.connect("/", controller="index", action="index")
-#
-#
-#
+
+
 #    print "LEN", len(map.matchlist)
 #    for xx in map.matchlist:
 ##         print "collection_name", xx.collection_name
@@ -71,6 +71,4 @@ def make_map():
 #        print
 ## 
 #
-
-
     return map

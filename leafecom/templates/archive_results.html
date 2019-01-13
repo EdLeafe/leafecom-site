@@ -8,80 +8,85 @@
 <%def name="body()">
   <div>
 % if c.error_message:
-	<div>
-		<h3 style="color: red">An error was encountered: ${c.error_message}. <br />Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
-	</div>
+    <div>
+        <h3 style="color: red">An error was encountered: ${c.error_message}. <br />Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
+    </div>
 % elif not c.results:
-	<div>
-		<h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
-	</div>
+    <div>
+        <h3 style="color: darkred">No results were found. Please <a href="/archives/search/${c.listname}">try again</a>.</h3>
+    </div>
 % endif
 
 <%def name="pager()">
-	<%
-		from webhelpers.html import literal
-		thispage = c.page
-		pagecount = c.total_pages
-		url = c.url.split("?")[0]
-		ret = []
-		total = "Page %s of %s" % (c.page, c.total_pages)
-		if thispage != 1:
-			ret.append("<a href='%s?page=1'>&lt;&lt; First</a>" % url)
-			if pagecount > 1:
-				ret.append("<a href='%s?page=%s'>&lt; Prior</a>" % (url, thispage-1))
-		if pagecount > 1:
-			ret.append("<a href='%s?page=%s'>Next &gt;</a>" % (url, thispage+1))
-		if thispage != pagecount:
-			ret.append("<a href='%s?page=%s'>Last &gt;&gt;</a>" % (url, pagecount))
-		return literal(total + "<br/>" + "&nbsp;&nbsp;&nbsp;".join(ret))
-	%>
+    <%
+        from webhelpers.html import literal
+        thispage = c.page
+        pagecount = c.total_pages
+        url = c.url.split("?")[0]
+        ret = []
+        total = "Page %s of %s" % (c.page, c.total_pages)
+        if thispage != 1:
+            ret.append("<a href='%s?page=1'>&lt;&lt; First</a>" % url)
+            if pagecount > 1:
+                ret.append("<a href='%s?page=%s'>&lt; Prior</a>" % (url, thispage-1))
+        if pagecount > 1:
+            ret.append("<a href='%s?page=%s'>Next &gt;</a>" % (url, thispage+1))
+        if thispage != pagecount:
+            ret.append("<a href='%s?page=%s'>Last &gt;&gt;</a>" % (url, pagecount))
+        return literal(total + "<br/>" + "&nbsp;&nbsp;&nbsp;".join(ret))
+    %>
 </%def>
 
+<!-- <p><b>From Developer: ${c.from_developer}</b></p> -->
 % if c.from_developer:
-<h1>DEV</h1>
+<h4>Query Statement: ${c.query_statement}</h4>
+<h5>Params: ${c.params}</h5>
+<h5>Date exceptions: ${c.date_excepts} of ${c.numResults}</h5>
+<h5>session: ${c.session}</h5>
+
 % endif
 
 % if c.results and not c.error_message:
-	<div>
-	<%
-		plural = {1: ""}.get(c.numResults, "es")
-	%>
-	<h3>Your query returned <span class="queryResNum">${c.numResults}</span> match${plural} in ${c.elapsed} seconds</h3>
-	<h4>${pager()}</h4>
-	
-	<hr>
-	<table border="0">
-		<tr>
-			<th class="rcell">#</th>
-			<th></th>
-			<th class="lcell" style="text-decoration: underline;">Subject, Author, Date Posted</th>
-		</tr>
-	% for num, msg in enumerate(c.results):
-		<tr class="archiveSearchRow">
-			<td class="rcell">${num+1}.</td>
-			<td></td>
-			<td class="lcell"><a href="/archives/msg/${msg.imsg}">${msg.csubject}</a><br>
-			<%
-				author = msg.cfrom
-				addStart = author.find("<")
-				if addStart > -1:
-					author = author[:addStart-1]
-				# Remove any quotes author the name
-				author = author.replace('"', '').strip()
-				date = msg.tposted.strftime("%Y.%m.%d")
-				time = msg.tposted.strftime("%H:%M:%S")
-			%>
-			<span class="authorPosting">Author: <b>${author}</b> Posted at: <b>${date}</b> ${time}</span>
-			</td>
-			</span>
-		</tr>
-	% endfor
-	</table>
-	<h4>${pager()}</h4>
-	</div>
-	<div style="margin-top: 60px;">
-	<a href="/archives/search/${c.listname}">New Query</a>
-	</div>
+    <div>
+    <%
+        plural = {1: ""}.get(c.numResults, "es")
+    %>
+    <h3>Your query returned <span class="queryResNum">${c.numResults}</span> match${plural} in ${c.elapsed} seconds</h3>
+    <h4>${pager()}</h4>
+
+    <hr>
+    <table border="0">
+        <tr>
+            <th class="rcell">#</th>
+            <th></th>
+            <th class="lcell" style="text-decoration: underline;">Subject, Author, Date Posted</th>
+        </tr>
+    % for num, msg in enumerate(c.results):
+        <tr class="archiveSearchRow">
+            <td class="rcell">${num+1}.</td>
+            <td></td>
+            <td class="lcell"><a href="/archives/msg/${msg.imsg}">${msg.csubject}</a> ${msg.id} <br>
+            <%
+                author = msg.cfrom
+                addStart = author.find("<")
+                if addStart > -1:
+                    author = author[:addStart-1]
+                # Remove any quotes author the name
+                #author = author.replace('"', '').strip()
+                date = msg.tposted.strftime("%Y-%m-%d")
+                time = msg.tposted.strftime("%H:%M:%S")
+            %>
+            <span class="authorPosting">Author: <b>${author}</b> Posted at: <b>${date}</b> ${time}</span>
+            </td>
+            </span>
+        </tr>
+    % endfor
+    </table>
+    <h4>${pager()}</h4>
+    </div>
+    <div style="margin-top: 60px;">
+    <a href="/archives/search/${c.listname}">New Query</a>
+    </div>
 
 % endif
 </div>

@@ -3,7 +3,7 @@ body {
 }
 
 .mainheading {
-   color: #366933 ;
+   color: #003300 ;
    background: white ;
    text-align: left ;
    font-family: Optima, Arial, Sans-serif ;
@@ -12,7 +12,7 @@ body {
 }
 
 .navbar {
-	color: #366933;
+	color: #003300;
 	background: #cfffc0;
 	text-align: left;
 	font-family: Optima, Arial, Sans-serif;
@@ -45,7 +45,7 @@ body {
 }
 
 .sidebar {
-   color: #366933 ;
+   color: #003300 ;
    background: #caefca ;
    text-align: center ;
    font-family: Helvetica, Arial, Sans-serif ;
@@ -260,6 +260,10 @@ a:active {
 	width: 24px;
 }
 
+.rcellWide {
+	text-align: right;
+}
+
 .msgHilite {
 	background:#ccffcc ;
 	font-weight:bold ;
@@ -418,3 +422,14 @@ div.nicetitle p.destination {
 .casualtyNumber { font-weight: bold; }
 
 a.invisible { color: white; background: white; }
+
+.btcLabel {
+	text-align:right ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}
+
+.btcVal {
+	text-align:left ;
+	font-weight:bold ;
+	font-family:Helvetica,Arial,Sans-serif ;
+}

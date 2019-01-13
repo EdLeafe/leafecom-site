@@ -35,6 +35,11 @@
 <%def name="title()">Full Thread Listing</%def>
 
 <%def name="body()">
+
+% if c.from_developer:
+<h4>Query Statement: ${c.query_statement}</h4>
+% endif
+
   <div>
 % if not c.results:
 	<div>

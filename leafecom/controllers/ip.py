@@ -11,10 +11,10 @@ log = logging.getLogger(__name__)
 class IpController(BaseController):
 
     def index(self, format=None):
-		addr = str(request.remote_addr)
-		if format is None:
-			return addr
-		elif format == "json":
-			return json.dumps({"ip": addr})
-		elif format == "xml":
-			return "<ip>%s</ip>" % addr
+        addr = str(request.remote_addr)
+        if format is None:
+            return addr
+        elif format == "json":
+            return json.dumps({"ip": addr})
+        elif format == "xml":
+            return "<ip>%s</ip>" % addr

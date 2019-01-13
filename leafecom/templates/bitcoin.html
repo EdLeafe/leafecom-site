@@ -1,0 +1,111 @@
+<%inherit file="/main_template.html"/>
+<%page cached="False"/>
+<%def name="extraCSS()"/>
+<%def name="extraJS()">
+  (function(b,i,t,C,O,I,N) {
+    window.addEventListener('load',function() {
+      if(b.getElementById(C))return;
+      I=b.createElement(i),N=b.getElementsByTagName(i)[0];
+      I.src=t;I.id=C;N.parentNode.insertBefore(I, N);
+    },false)
+  })(document,'script','https://widgets.bitcoin.com/widget.js','btcwdgt');
+</%def>
+<%def name="extraHead()" />
+<%def name="title()">Bitcoin Status</%def>
+
+<%def name="body()">
+  <%
+  import locale
+  locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+  my_btc = locale.currency(c.my_value, grouping=True)
+  formatted_btc = locale.currency(c.btc_rate, grouping=True)
+  formatted_bch = locale.currency(c.bch_rate, grouping=True)
+
+  from datetime import datetime
+  now = datetime.now()
+  now_fmt = now.strftime("%b %d @ %H:%M:%S")
+  %>
+
+  <div>
+  <table border="0" cellpadding="5">
+    <tr><td class="btcLabel">Current BTC/USD</td><td class="btcVal">${formatted_btc}</td></tr>
+    <tr><td class="btcLabel">Current BCH/USD</td><td class="btcVal">${formatted_bch}</td></tr>
+    <tr />
+    <tr><td text-align="center" colspan="2">${now_fmt}</td></tr>
+  </table>
+  </div>
+
+  <div>
+    <p>Current BTC/BCH: ${my_btc}</p>
+  </div>
+
+  <div>
+  <table border="0" cellpadding="3">
+    <tr><td class="rcellWide">Hash Rate:</td>            <td class="lcell">${c.hashrate}</td></tr>
+    <tr><td class="rcellWide">Unconfirmed Reward:</td>   <td class="lcell">${"%12.8f" % c.unconfirmed_reward}</td></tr>
+    <tr><td class="rcellWide">Estimated Reward:</td>     <td class="lcell">${"%12.8f" % c.estimated_reward}</td></tr>
+    <tr><td class="rcellWide">Confirmed Reward:</td>     <td class="lcell">${"%12.8f" % c.confirmed_reward}</td></tr>
+    <tr><td class="rcellWide">Confirmed Value:</td>      <td class="lcell">${"$%9.2f" % c.btc_value}</td></tr>
+  </table>
+  </div>
+
+<!--
+<div class="btcwdgt-price" id="btc-quote" bw-theme="light" bw-cur="usd"></div>
+-->
+
+  <p>&nbsp;</p>
+  <div>
+    <table border="1" cellpadding="4">
+        <tr>
+            <th class="lcell">Worker</th>
+            <th class="lcell">Shares</th>
+            <th class="lcell">Hashrate</th>
+            <th class="lcell">Score</th>
+        </tr>
+<%
+def ordworkers():
+    acct_prefix = "asciipaper."
+    keys = c.workers.keys()
+    ret = [key.lstrip(acct_prefix) for key in keys]
+    ret.sort()
+    return ret
+
+#    ret = []
+#    p8s = [key for key in keys if key.split(acct_prefix)[-1].startswith("p8")]
+#    ims = [key for key in keys if key.split(acct_prefix)[-1].startswith("imac")]
+#    wks = [key for key in keys if key.split(acct_prefix)[-1].startswith("worker")]
+#    p8s.sort(key=lambda x: int(x.lstrip(acct_prefix).split("-")[-1]))
+#    wks.sort()
+#    ret.extend(wks)
+#    ret.extend(p8s)
+#    ret.extend(ims)
+#    return ret
+%>
+    % for worker in ordworkers():
+        <%
+        worker_name = worker.split(".")[-1]
+        full_name = "asciipaper.%s" % worker_name
+        wdata = c.workers.get(full_name)
+        if not wdata:
+            continue
+        endif
+        if not float(wdata["score"]):
+            continue
+        endif
+        %>
+        <tr class="archiveSearchRow">
+            <td class="lcell">${worker}</td>
+            <td class="lcell">${wdata["shares"]}</td>
+            <td class="lcell">${wdata["hashrate"]}</td>
+            <td class="lcell">${wdata["score"]}</td>
+        </tr>
+    % endfor
+    </table>
+
+  </div>
+  <div>
+    <p><a href="https://slushpool.com/accounts/profile/">Mining Pool</a></p>
+    <p><a href="https://www.coinbase.com/accounts/primary">Coinbase</a></p>
+  </div>
+
+</%def>
